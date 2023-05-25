@@ -5,9 +5,8 @@ export async function main(ns) {
 
    ns.tail()
 
-   let b = new Batch(ns, "n00dles", 1);
+   let b = new Batch(ns, "n00dles", 0.01);
 
-   ns.print("Cycle ram = ", b.getCycleRamCost())
-   ns.print("Total ram = ", ns.getServerMaxRam("home"))
+   ns.print(b.toString())
 
 }

@@ -26,7 +26,7 @@ export function openPortsOnServer(ns, server) {
    try {
       ns.nuke(server)
    } catch {
-      pass
+
    }
 
 }
@@ -49,23 +49,18 @@ export function countPortOpen(ns) {
    if (ns.fileExists("brutessh.exe")) {
       p++
    }
-
    if (ns.fileExists("ftpcrack.exe")) {
       p++
    }
-
    if (ns.fileExists("relaysmtp.exe")) {
       p++
    }
-
    if (ns.fileExists("httpworm.exe")) {
       p++
    }
-
    if (ns.fileExists("sqlinject.exe")) {
       p++
    }
-
    return p
 }
 

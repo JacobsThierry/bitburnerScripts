@@ -1,6 +1,11 @@
 import { calculateHackingTime } from "Formulas/calculateHackingTime"
 import { calculateGrowTime } from "Formulas/calculateGrowTime"
 import { calculateWeakenTime } from "Formulas/calculateWeakenTime"
+import { execSomewhere } from "servers/ramManager"
+import { calculateServerSecurityIncrease } from "Formulas/calculateServerSecurityIncrease"
+import { hackAnalyzeThreads } from "Formulas/hackAnalyzeThreads"
+import { growthAnalyzeThreads } from "Formulas/growthAnalyzeThreads"
+import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 
 export class Batch {
    /**
@@ -10,21 +15,77 @@ export class Batch {
     * @param {NS} ns
     * @returns {any}
     */
-   constructor(ns, server, t0 = 0.2, max_depth = 9999) {
+   constructor(ns, server, percentStolen = 0.5, t0 = 0.2, max_depth = 9999) {
       this.server = server
       this.t0 = t0
       this.ns = ns
       this.max_depth = max_depth
+      this.percentStolen = percentStolen;
+   }
+
+   toString() {
+      let out = ""
+      out += "Server = " + this.server + "\n"
+      out += "T0 = " + this.t0 + "\n"
+      out += "Max depth = " + this.max_depth + "\n"
+      out += "Percent stolent = " + this.percentStolen + "\n"
+
+
+      let { depth, period } = this.getDepthAndPeriod();
+      out += "Depth = " + depth + " ; Period = " + this.ns.tFormat(period, 3) + "\n\n"
+
+      let serv = this.ns.getServer(this.server);
+      serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
+
+      out += "Times : \n"
+      out += "\t Hacking time = " + this.ns.tFormat(calculateHackingTime(serv, this.ns.getPlayer()), 5) + "\n"
+      out += "\t Grow time = " + this.ns.tFormat(calculateGrowTime(serv, this.ns.getPlayer()), 5) + "\n"
+      out += "\t Weaken time = " + this.ns.tFormat(calculateWeakenTime(serv, this.ns.getPlayer()), 5) + "\n"
+
+      out += "\n"
+      let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
+      out += "Threads per cycles : \n"
+      out += "\t Hack thread : " + ht + "\n"
+      out += "\t Weaken 1 thread : " + wt1 + "\n"
+      out += "\t Grow thread : " + gt + "\n"
+      out += "\t Weaken 2 thread : " + wt2 + "\n"
+      out += "\t total : " + (ht + wt1 + gt + wt2) + "\n"
+
+
+      out += "\n"
+      out += "Estimated revenues : " + this.getRevenues() + "\n";
+
+      out += "Ram per cycle : " + this.getCycleRamCost() + "\n";
+
+      out += "Total ram cost : " + this.getTotalRamCost() + "\n";
+      out += "Total thread count : " + ((ht + wt1 + gt + wt2) * depth) + "\n"
+
+
+
+      return out
+
+   }
+
+   getRevenues() {
+
+      let { depth, period } = this.getDepthAndPeriod();
+
+      let moneyPerCycle = this.ns.getServerMaxMoney(this.server) * this.percentStolen
+      let totalMoneyPerPeriod = moneyPerCycle * depth
+      let moneyPerSec = totalMoneyPerPeriod / period
+
+      return moneyPerSec;
+
    }
 
    times() {
-      let weak_time = calculateWeakenTime(this.ns.getServer(this.server), this.ns.getPlayer());
-      let grow_time = calculateGrowTime(this.ns.getServer(this.server), this.ns.getPlayer());
-      let hack_time = calculateHackingTime(this.ns.getServer(this.server), this.ns.getPlayer());
 
+      let serv = this.ns.getServer(this.server);
+      serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
 
-
-
+      let weak_time = calculateWeakenTime(serv, this.ns.getPlayer());
+      let grow_time = calculateGrowTime(serv, this.ns.getPlayer());
+      let hack_time = calculateHackingTime(serv, this.ns.getPlayer());
 
       return { weak_time, grow_time, hack_time }
    }
@@ -94,16 +155,19 @@ export class Batch {
    getThreadsPerCycle() {
       let ht, wt1, gt, wt2;
 
-      //How many thread to steal 50% of the cash
-      ht = hackAnalyzeThreads(this.ns.getServer(this.server),
+      let serv = this.ns.getServer(this.server);
+      serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
+
+      //How many thread to steal percentSolen% of the cash
+      ht = hackAnalyzeThreads(serv,
          this.ns.getPlayer(),
-         Math.floor(this.ns.getServerMaxMoney(this.server) / 2))
+         Math.floor(this.ns.getServerMaxMoney(this.server) * this.percentStolen))
 
       ht = Math.floor(ht)
       let hackSecurityIncrase = calculateServerSecurityIncrease(ht, false)
 
       //How many thread to double the cash
-      gt = growthAnalyzeThreads(this.ns.getServer(this.server), this.ns.getPlayer(), 2, 1)
+      gt = growthAnalyzeThreads(serv, this.ns.getPlayer(), 1 / (1 - this.percentStolen), 1)
       gt = Math.ceil(gt)
       let growSecurityIncrase = calculateServerSecurityIncrease(gt, true)
 
@@ -113,47 +177,66 @@ export class Batch {
       wt1 = Math.ceil(wt1)
       wt2 = Math.ceil(wt2)
 
-
-
       return { ht, wt1, gt, wt2 }
 
    }
 
    getCycleRamCost() {
-      this.ns.tprint(this.hackScript)
+
       let hackScriptCost = this.ns.getScriptRam(this.hackScript);
       let weakScriptCost = this.ns.getScriptRam(this.weakScript);
       let growScriptCost = this.ns.getScriptRam(this.growScript);
 
       let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
 
-      this.ns.tprint("Threads : ", ht, " ", wt1, " ", gt, " ", wt2)
-      this.ns.tprint("Ram cost : ", hackScriptCost, " ", weakScriptCost, " ", growScriptCost)
+      //this.ns.tprint("Threads : ", ht, " ", wt1, " ", gt, " ", wt2)
+      //this.ns.tprint("Ram cost : ", hackScriptCost, " ", weakScriptCost, " ", growScriptCost)
 
       return ht * hackScriptCost + wt1 * weakScriptCost + gt * growScriptCost + wt2 * weakScriptCost
    }
 
+   getTotalRamCost() {
+      let { depth, period } = this.getDepthAndPeriod();
+      return this.getCycleRamCost() * depth + this.ns.getScriptRam("/batching/Batch.js");
+   }
+
 
    async loop() {
+      let id = 0;
       while (true) {
+         id++;
          let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
          let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
 
-         this.ns.tprint(hack_delay)
-         execSomewhere(this.ns, this.hackScript, ht, this.server, hack_delay);
-         execSomewhere(this.ns, this.weakScript, wt1, this.server, weak_delay_1);
-         execSomewhere(this.ns, this.growScript, gt, this.server, grow_delay);
-         execSomewhere(this.ns, this.weakScript, wt2, this.server, weak_delay_2);
 
+
+         let hackok = execSomewhere(this.ns, this.hackScript, ht, this.server, hack_delay, id);
+         if (!hackok) {
+            this.ns.print("Not all hack threads have been started")
+         }
          await this.ns.sleep(this.t0);
+
+         let wt1ok = execSomewhere(this.ns, this.weakScript, wt1, this.server, weak_delay_1, id);
+         if (!wt1ok) {
+            this.ns.print("Not all weaken 1 threads have been started")
+         }
+         await this.ns.sleep(this.t0);
+
+
+         let growok = execSomewhere(this.ns, this.growScript, gt, this.server, grow_delay, id);
+         if (!growok) {
+            this.ns.print("Not all grow threads have been started")
+         }
+         await this.ns.sleep(this.t0);
+
+         let wt2ok = execSomewhere(this.ns, this.weakScript, wt2, this.server, weak_delay_2, id);
+         if (!wt2ok) {
+            this.ns.print("Not all weaken 2 threads have been started")
+         }
+         await this.ns.sleep(this.t0);
+
       }
    }
 
 }
 
-import { execSomewhere } from "servers/ramManager"
-import { calculateServerSecurityIncrease } from "Formulas/calculateServerSecurityIncrease"
-import { hackAnalyzeThreads } from "Formulas/hackAnalyzeThreads"
-import { growthAnalyzeThreads } from "Formulas/growthAnalyzeThreads"
-import { calculateThreadsForGrowth } from "Formulas/calculateServerGrowth"
-import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"

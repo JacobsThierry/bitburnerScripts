@@ -1,7 +1,7 @@
 import { calculateIntelligenceBonus } from "Formulas/calculateIntelligenceBonus"
 
 /**
- * Returns time it takes to complete a hack on a server, in seconds
+ * Returns time it takes to complete a hack on a server, in milliseconds
  * @param {Server} server
  * @param {IPerson} person
  * @returns {number}
@@ -21,5 +21,5 @@ export function calculateHackingTime(server, person) {
       (hackTimeMultiplier * skillFactor) /
       (person.mults.hacking_speed * calculateIntelligenceBonus(person.skills.intelligence, 1));
 
-   return hackingTime;
+   return 1000 * hackingTime;
 }
