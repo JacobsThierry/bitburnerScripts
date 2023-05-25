@@ -140,10 +140,10 @@ export class Batch {
          let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
 
          this.ns.tprint(hack_delay)
-         this.ns.execSomewhere(ns, this.hackScript, ht, this.server, hack_delay);
-         this.ns.execSomewhere(ns, this.weakScript, wt1, this.server, weak_delay_1);
-         this.ns.execSomewhere(ns, this.growScript, gt, this.server, grow_delay);
-         this.ns.execSomewhere(ns, this.weakScript, wt2, this.server, weak_delay_2);
+         execSomewhere(this.ns, this.hackScript, ht, this.server, hack_delay);
+         execSomewhere(this.ns, this.weakScript, wt1, this.server, weak_delay_1);
+         execSomewhere(this.ns, this.growScript, gt, this.server, grow_delay);
+         execSomewhere(this.ns, this.weakScript, wt2, this.server, weak_delay_2);
 
          await this.ns.sleep(this.t0);
       }
