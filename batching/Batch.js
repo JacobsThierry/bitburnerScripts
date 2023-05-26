@@ -7,7 +7,114 @@ import { hackAnalyzeThreads } from "Formulas/hackAnalyzeThreads"
 import { growthAnalyzeThreads } from "Formulas/growthAnalyzeThreads"
 import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 
+
 export class Batch {
+
+
+   constructor(ns, server, hdelay, w1delay, gdelay, w2delay, t0, hthread, w1thread, gthread, w2thread, hackScript, growScript, weakScript, id) {
+
+      this.ns = ns;
+      this.server = server;
+      this.hdelay = hdelay;
+      this.w1delay = w1delay;
+      this.gdelay = gdelay;
+      this.w2delay = w2delay
+      this.t0 = t0;
+      this.hthread = hthread;
+      this.w1thread = w1thread;
+      this.gthread = gthread;
+      this.w2thread = w2thread;
+
+      this.hackScript = hackScript
+      this.growScript = growScript
+      this.weakScript = weakScript
+
+
+      this.id = id;
+
+
+      this.hackStarted = false
+      this.weak1Started = false
+      this.growStarted = false
+      this.weak2Started = false
+
+      this.startTime = Date.now();
+      this.done = false;
+   }
+
+
+   update() {
+
+      let now = Date.now();
+
+      let hacktime = this.startTime + this.hdelay;
+      let hacktimeRemaining = hacktime - now;
+
+      if (!this.hackStarted && hacktimeRemaining < this.t0) {
+
+         let hackok = execSomewhere(this.ns, this.hackScript, this.hthread, this.server, hacktimeRemaining, this.id);
+         if (hackok) {
+            this.ns.print("All hack threads with the id ", this.id, " have been started")
+         } else {
+            this.ns.print("Not all hack threads with the id ", this.id, " have been started")
+         }
+
+         this.hackStarted = true
+      }
+
+      let weaken1time = this.startTime + this.w1delay;
+      let weaktimeRemaining = weaken1time - now;
+
+      if (!this.weak1Started && weaktimeRemaining < this.t0) {
+         let w1ok = execSomewhere(this.ns, this.weakScript, this.w1thread, this.server, weaktimeRemaining, this.id);
+
+         if (w1ok) {
+            this.ns.print("All weaken 1 threads with the id ", this.id, " have been started")
+         } else {
+            this.ns.print("Not all weaken 1 threads with the id ", this.id, " have been started")
+         }
+
+         this.weak1Started = true
+      }
+
+      let growTime = this.startTime + this.gdelay;
+      let growtimeRemaining = growTime - now;
+
+      if (!this.growStarted && growtimeRemaining < this.t0) {
+         let gok = execSomewhere(this.ns, this.growScript, this.gthread, this.server, growtimeRemaining, this.id);
+
+         if (gok) {
+            this.ns.print("All grow threads with the id ", this.id, " have been started")
+         } else {
+            this.ns.print("Not all grow threads with the id ", this.id, " have been started")
+         }
+         this.growStarted = true;
+      }
+
+      let weaken2time = this.startTime + this.w2delay
+      let weaktime2Remaining = weaken2time - now;
+
+      if (!this.weak2Started && weaktime2Remaining < this.t0) {
+         let w2ok = execSomewhere(this.ns, this.weakScript, this.w2thread, this.server, weaktime2Remaining, this.id);
+         if (w2ok) {
+            this.ns.print("All weaken 2 threads with the id ", this.id, " have been started")
+         } else {
+            this.ns.print("Not all weaken 2 threads with the id ", this.id, " have been started")
+         }
+
+         this.weak2Started = true;
+
+      }
+
+      if (this.hackStarted && this.weak1Started && this.growStarted && this.weak2Started) {
+         this.done = true;
+      }
+
+   }
+
+}
+
+export class Batcher {
    /**
     * Description
     * @param {any} server
@@ -15,7 +122,7 @@ export class Batch {
     * @param {NS} ns
     * @returns {any}
     */
-   constructor(ns, server, percentStolen = 0.5, t0 = 0.2, max_depth = 9999) {
+   constructor(ns, server, percentStolen = 0.5, t0 = 1000, max_depth = 9999) {
       this.server = server
       this.t0 = t0
       this.ns = ns
@@ -26,7 +133,7 @@ export class Batch {
    toString() {
       let out = ""
       out += "Server = " + this.server + "\n"
-      out += "T0 = " + this.t0 + "\n"
+      out += "T0 = " + this.ns.tFormat(this.t0, 3) + "\n"
       out += "Max depth = " + this.max_depth + "\n"
       out += "Percent stolent = " + this.percentStolen + "\n"
 
@@ -38,9 +145,10 @@ export class Batch {
       serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
 
       out += "Times : \n"
-      out += "\t Hacking time = " + this.ns.tFormat(calculateHackingTime(serv, this.ns.getPlayer()), 5) + "\n"
-      out += "\t Grow time = " + this.ns.tFormat(calculateGrowTime(serv, this.ns.getPlayer()), 5) + "\n"
-      out += "\t Weaken time = " + this.ns.tFormat(calculateWeakenTime(serv, this.ns.getPlayer()), 5) + "\n"
+      let { weak_time, grow_time, hack_time } = this.times()
+      out += "\t Hacking time = " + this.ns.tFormat(hack_time, 5) + "\n"
+      out += "\t Grow time = " + this.ns.tFormat(grow_time, 5) + "\n"
+      out += "\t Weaken time = " + this.ns.tFormat(weak_time, 5) + "\n"
 
       out += "\n"
       let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
@@ -90,16 +198,21 @@ export class Batch {
       return { weak_time, grow_time, hack_time }
    }
 
-   //from stalefish on discord
+
    getDepthAndPeriod() {
 
       let { weak_time, grow_time, hack_time } = this.times()
+      let period, depth;
+
+
 
 
       let t0 = this.t0;
 
-      let period, depth;
-      const kW_max = Math.min(Math.floor(1 + (weak_time - 4 * t0) / (8 * t0)), this.max_depth);
+
+
+      //from stalefish on discord
+      const kW_max = Math.floor(1 + (weak_time - 4 * t0) / (8 * t0));
 
       schedule: for (let kW = kW_max; kW >= 1; --kW) {
          const t_min_W = (weak_time + 4 * t0) / kW;
@@ -124,6 +237,10 @@ export class Batch {
             }
          }
       }
+
+      //from DarkTechnomancer
+      depth = Math.ceil(weak_time / (4 * this.t0));
+
 
       return { depth, period }
    }
@@ -197,14 +314,15 @@ export class Batch {
 
    getTotalRamCost() {
       let { depth, period } = this.getDepthAndPeriod();
-      return this.getCycleRamCost() * depth + this.ns.getScriptRam("/batching/Batch.js");
+      return this.getCycleRamCost() * depth + this.ns.getScriptRam("main.js");
    }
 
 
    async loop() {
-      let id = 0;
+      let id = 0
       while (true) {
-         id++;
+
+
          let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
          let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
 
@@ -214,26 +332,25 @@ export class Batch {
          if (!hackok) {
             this.ns.print("Not all hack threads have been started")
          }
-         await this.ns.sleep(this.t0);
 
          let wt1ok = execSomewhere(this.ns, this.weakScript, wt1, this.server, weak_delay_1, id);
          if (!wt1ok) {
             this.ns.print("Not all weaken 1 threads have been started")
          }
-         await this.ns.sleep(this.t0);
 
 
          let growok = execSomewhere(this.ns, this.growScript, gt, this.server, grow_delay, id);
          if (!growok) {
             this.ns.print("Not all grow threads have been started")
          }
-         await this.ns.sleep(this.t0);
 
          let wt2ok = execSomewhere(this.ns, this.weakScript, wt2, this.server, weak_delay_2, id);
          if (!wt2ok) {
             this.ns.print("Not all weaken 2 threads have been started")
          }
-         await this.ns.sleep(this.t0);
+
+         id++;
+         await this.ns.sleep(5 * this.t0);
 
       }
    }
