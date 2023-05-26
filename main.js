@@ -10,17 +10,20 @@ import { calculateHackingTime } from "Formulas/calculateHackingTime"
 export async function main(ns) {
 
    ns.disableLog("ALL");
+   ns.enableLog("exec");
 
    openAllPorts(ns);
    copyHacking(ns);
    ns.tail();
 
 
+
+
    ns.print("Servers : ", findAllRootServers(ns));
    let maxInstance = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
    ns.print("max instance = " + maxInstance);
 
-   let b = new Batcher(ns, "n00dles", 0.0002, 3855);
+   let b = new Batcher(ns, "n00dles", 0.01, 855);
 
 
 

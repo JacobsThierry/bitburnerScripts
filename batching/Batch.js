@@ -50,6 +50,8 @@ export class Batch {
       let hacktime = this.startTime + this.hdelay;
       let hacktimeRemaining = hacktime - now;
 
+
+
       if (!this.hackStarted && hacktimeRemaining < this.t0) {
 
          let hackok = execSomewhere(this.ns, this.hackScript, this.hthread, this.server, hacktimeRemaining, this.id);
@@ -64,6 +66,8 @@ export class Batch {
 
       let weaken1time = this.startTime + this.w1delay;
       let weaktimeRemaining = weaken1time - now;
+
+
 
       if (!this.weak1Started && weaktimeRemaining < this.t0) {
          let w1ok = execSomewhere(this.ns, this.weakScript, this.w1thread, this.server, weaktimeRemaining, this.id);
@@ -202,18 +206,13 @@ export class Batcher {
    getDepthAndPeriod() {
 
       let { weak_time, grow_time, hack_time } = this.times()
-      let period, depth;
-
-
-
 
       let t0 = this.t0;
 
 
-
       //from stalefish on discord
-      const kW_max = Math.floor(1 + (weak_time - 4 * t0) / (8 * t0));
-
+      let period, depth;
+      const kW_max = Math.min(Math.ceil(weak_time / (4 * this.t0)), this.max_depth);
       schedule: for (let kW = kW_max; kW >= 1; --kW) {
          const t_min_W = (weak_time + 4 * t0) / kW;
          const t_max_W = (weak_time - 4 * t0) / (kW - 1);
@@ -238,9 +237,10 @@ export class Batcher {
          }
       }
 
-      //from DarkTechnomancer
-      depth = Math.ceil(weak_time / (4 * this.t0));
-
+      /*
+            //from DarkTechnomancer
+            depth = Math.ceil(weak_time / (4 * this.t0));
+      */
 
       return { depth, period }
    }
@@ -320,37 +320,41 @@ export class Batcher {
 
    async loop() {
       let id = 0
+      let batches = []
+      let lastStart = 0;
+
+
       while (true) {
 
-
-         let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
-         let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
+         let { depth, period } = this.getDepthAndPeriod();
 
 
+         if (Date.now() > lastStart + period) {
+            lastStart = Date.now()
 
-         let hackok = execSomewhere(this.ns, this.hackScript, ht, this.server, hack_delay, id);
-         if (!hackok) {
-            this.ns.print("Not all hack threads have been started")
+            let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
+            let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
+
+            let b = new Batch(this.ns, this.server, hack_delay, weak_delay_1, grow_delay, weak_delay_2, this.t0, ht, wt1,
+               gt, wt2, this.hackScript, this.growScript, this.weakScript, id);
+
+            batches.push(b);
+            id++;
          }
 
-         let wt1ok = execSomewhere(this.ns, this.weakScript, wt1, this.server, weak_delay_1, id);
-         if (!wt1ok) {
-            this.ns.print("Not all weaken 1 threads have been started")
+
+
+         for (let i = 0; i < batches.length; i++) {
+            let b = batches[i];
+            b.update();
          }
 
+         batches = batches.filter(b => !b.done)
 
-         let growok = execSomewhere(this.ns, this.growScript, gt, this.server, grow_delay, id);
-         if (!growok) {
-            this.ns.print("Not all grow threads have been started")
-         }
+         //this.ns.print("Depth (?) = ", batches.length)
 
-         let wt2ok = execSomewhere(this.ns, this.weakScript, wt2, this.server, weak_delay_2, id);
-         if (!wt2ok) {
-            this.ns.print("Not all weaken 2 threads have been started")
-         }
 
-         id++;
-         await this.ns.sleep(5 * this.t0);
+         await this.ns.sleep(this.t0);
 
       }
    }
