@@ -74,7 +74,7 @@ export class Batch {
       if (!this.hackStarted && hacktimeRemaining < this.t0) {
 
          let hackok = execSomewhere(this.ns, this.hackScript, this.hthread, this.server, hacktimeRemaining, this.id);
-         if (hackok) {
+         if (hackok == 0) {
             this.ns.print("All hack threads with the id ", this.id, " have been started")
          } else {
             this.ns.print("Not all hack threads with the id ", this.id, " have been started")
@@ -91,7 +91,7 @@ export class Batch {
       if (!this.weak1Started && weaktimeRemaining < this.t0) {
          let w1ok = execSomewhere(this.ns, this.weakScript, this.w1thread, this.server, weaktimeRemaining, this.id);
 
-         if (w1ok) {
+         if (w1ok == 0) {
             this.ns.print("All weaken 1 threads with the id ", this.id, " have been started")
          } else {
             this.ns.print("Not all weaken 1 threads with the id ", this.id, " have been started")
@@ -106,7 +106,7 @@ export class Batch {
       if (!this.growStarted && growtimeRemaining < this.t0) {
          let gok = execSomewhere(this.ns, this.growScript, this.gthread, this.server, growtimeRemaining, this.id);
 
-         if (gok) {
+         if (gok == 0) {
             this.ns.print("All grow threads with the id ", this.id, " have been started")
          } else {
             this.ns.print("Not all grow threads with the id ", this.id, " have been started")
@@ -119,7 +119,7 @@ export class Batch {
 
       if (!this.weak2Started && weaktime2Remaining < this.t0) {
          let w2ok = execSomewhere(this.ns, this.weakScript, this.w2thread, this.server, weaktime2Remaining, this.id);
-         if (w2ok) {
+         if (w2ok == 0) {
             this.ns.print("All weaken 2 threads with the id ", this.id, " have been started")
          } else {
             this.ns.print("Not all weaken 2 threads with the id ", this.id, " have been started")
@@ -151,6 +151,10 @@ export class Batcher {
       this.ns = ns
       this.max_depth = max_depth
       this.percentStolen = percentStolen;
+
+      this.id = 0
+      this.batches = []
+      this.lastStart = 0;
    }
 
    toString() {
@@ -362,52 +366,49 @@ export class Batcher {
    }
 
 
-   async loop() {
-      let id = 0
-      let batches = []
-      let lastStart = 0;
+   loop() {
 
 
-      while (true) {
-
-         let { depth, period } = this.getDepthAndPeriod();
 
 
-         if (Date.now() > lastStart + period) {
+      let { depth, period } = this.getDepthAndPeriod();
 
 
-            let delay = Date.now() - (lastStart + period)
+      if (Date.now() > this.lastStart + period) {
 
-            if (lastStart == 0) {
-               delay = 0
-            }
 
-            lastStart = Date.now()
+         let delay = Date.now() - (this.lastStart + period)
 
-            let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
-            let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
-
-            let b = new Batch(this.ns, this.server, Math.max(0, hack_delay - delay),
-               Math.max(weak_delay_1 - delay, 0),
-               Math.max(grow_delay - delay, 0),
-               Math.max(weak_delay_2 - delay, 0), this.t0, ht, wt1,
-               gt, wt2, this.hackScript, this.growScript, this.weakScript, id);
-
-            batches.push(b);
-            id++;
+         if (this.lastStart == 0) {
+            delay = 0
          }
 
+         this.lastStart = Date.now()
 
+         let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
+         let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
 
-         for (let i = 0; i < batches.length; i++) {
-            let b = batches[i];
-            b.update();
-         }
+         let b = new Batch(this.ns, this.server, Math.max(0, hack_delay - delay),
+            Math.max(weak_delay_1 - delay, 0),
+            Math.max(grow_delay - delay, 0),
+            Math.max(weak_delay_2 - delay, 0), this.t0, ht, wt1,
+            gt, wt2, this.hackScript, this.growScript, this.weakScript, this.id);
 
-         batches = batches.filter(b => !b.done)
-         await this.ns.sleep(this.t0);
-
+         this.batches.push(b);
+         this.id++;
       }
+
+
+
+      for (let i = 0; i < this.batches.length; i++) {
+         let b = this.batches[i];
+         b.update();
+      }
+
+      this.batches = this.batches.filter(b => !b.done)
+
+
+
    }
 
 }

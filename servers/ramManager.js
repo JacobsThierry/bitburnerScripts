@@ -31,9 +31,16 @@ export function getTotalRamAvailable(ns) {
    return totalRam;
 }
 
-/** @param {NS} ns */
-export function execSomewhere(ns, script, threads, ...args) {
 
+/**
+ * Exec a script somewhere. Return the ammount of threads not done.
+ * @param {NS} ns
+ * @param {string} script
+ * @param {number} threads
+ * @param {any} ...args
+ * @returns {number}
+ */
+export function execSomewhere(ns, script, threads, ...args) {
 
 
    let servers = findAllServers(ns);
@@ -63,13 +70,13 @@ export function execSomewhere(ns, script, threads, ...args) {
       }
 
       if (threads == 0) {
-         return true;
+         return 0;
       }
 
 
    }
 
-   return false;
+   return threads;
 }
 
 /** @param {NS} ns */
