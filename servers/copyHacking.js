@@ -1,11 +1,11 @@
 import { findAllServers } from "servers/findAllServers"
 
 /** @param {NS} ns */
-export async function copyHacking(ns) {
+export function copyHacking(ns) {
 
    let servers = findAllServers(ns)
 
-   let files = ns.ls("home", "hackingFunctions")
+   let files = ns.ls("home", "")
 
 
 
@@ -17,7 +17,10 @@ export async function copyHacking(ns) {
       if (serv == "home") { continue }
 
       for (let i = 0; i < files.length; i++) {
-         ns.scp(files[i], serv, "home")
+         let f = files[i]
+         if (f.endsWith(".js")) {
+            ns.scp(f, serv, "home")
+         }
       }
 
    }

@@ -3,7 +3,7 @@ import { calculateGrowTime } from "Formulas/calculateGrowTime"
 import { calculateWeakenTime } from "Formulas/calculateWeakenTime"
 import { execSomewhere } from "servers/ramManager"
 import { calculateServerSecurityIncrease } from "Formulas/calculateServerSecurityIncrease"
-import { hackAnalyzeThreads } from "Formulas/hackAnalyzeThreads"
+import { hackAnalyzeThreads as hackAnalThreads } from "Formulas/hackAnalyzeThreads"
 import { growthAnalyzeThreads } from "Formulas/growthAnalyzeThreads"
 import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 
@@ -11,6 +11,25 @@ import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 export class Batch {
 
 
+   /**
+    * Description
+    * @param {NS} ns
+    * @param {any} server
+    * @param {any} hdelay
+    * @param {any} w1delay
+    * @param {any} gdelay
+    * @param {any} w2delay
+    * @param {any} t0
+    * @param {any} hthread
+    * @param {any} w1thread
+    * @param {any} gthread
+    * @param {any} w2thread
+    * @param {any} hackScript
+    * @param {any} growScript
+    * @param {any} weakScript
+    * @param {any} id
+    * @returns {any}
+    */
    constructor(ns, server, hdelay, w1delay, gdelay, w2delay, t0, hthread, w1thread, gthread, w2thread, hackScript, growScript, weakScript, id) {
 
       this.ns = ns;
@@ -146,7 +165,7 @@ export class Batcher {
       out += "Depth = " + depth + " ; Period = " + this.ns.tFormat(period, 3) + "\n\n"
 
       let serv = this.ns.getServer(this.server);
-      serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
+      serv.hackDifficulty = serv.minDifficulty //this.ns.getServerMinSecurityLevel(this.server)
 
       out += "Times : \n"
       let { weak_time, grow_time, hack_time } = this.times()
@@ -178,22 +197,32 @@ export class Batcher {
 
    }
 
+   /**
+    * return the estimated money/sec of the batcher
+    * @returns {number}
+    */
    getRevenues() {
 
       let { depth, period } = this.getDepthAndPeriod();
+      let serv = this.ns.getServer(this.server)
 
-      let moneyPerCycle = this.ns.getServerMaxMoney(this.server) * this.percentStolen
-      let totalMoneyPerPeriod = moneyPerCycle * depth
-      let moneyPerSec = totalMoneyPerPeriod / period
+      let moneyPerPeriod = serv.moneyMax * this.percentStolen
+
+      let periodSec = period * 0.001;
+      let moneyPerSec = moneyPerPeriod / periodSec;
 
       return moneyPerSec;
 
    }
 
+   /**
+    * return the weak time, grow time and hack time of the server if the security is at the minimum
+    * @returns {number, number, number}
+    */
    times() {
 
       let serv = this.ns.getServer(this.server);
-      serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
+      serv.hackDifficulty = serv.minDifficulty //this.ns.getServerMinSecurityLevel(this.server)
 
       let weak_time = calculateWeakenTime(serv, this.ns.getPlayer());
       let grow_time = calculateGrowTime(serv, this.ns.getPlayer());
@@ -203,6 +232,10 @@ export class Batcher {
    }
 
 
+   /**
+    * return the depth and the period of the batch
+    * @returns {number, number}
+    */
    getDepthAndPeriod() {
 
       let { weak_time, grow_time, hack_time } = this.times()
@@ -237,14 +270,13 @@ export class Batcher {
          }
       }
 
-      /*
-            //from DarkTechnomancer
-            depth = Math.ceil(weak_time / (4 * this.t0));
-      */
-
       return { depth, period }
    }
 
+   /**
+    * Return the hack, weak1, grow, weak2 delays
+    * @returns {number, number, number, number}
+    */
    getDelays() {
 
       let { weak_time, grow_time, hack_time } = this.times()
@@ -269,16 +301,20 @@ export class Batcher {
    growScript = "/hackingFunctions/grow_delay.js"
 
 
+   /**
+    * Return the number of threads per cycle for hack, weaken1, grow, weaken2
+    * @returns {number, number, number, number}
+    */
    getThreadsPerCycle() {
       let ht, wt1, gt, wt2;
 
       let serv = this.ns.getServer(this.server);
-      serv.hackDifficulty = this.ns.getServerMinSecurityLevel(this.server)
+      serv.hackDifficulty = serv.minDifficulty //this.ns.getServerMinSecurityLevel(this.server)
 
       //How many thread to steal percentSolen% of the cash
-      ht = hackAnalyzeThreads(serv,
+      ht = hackAnalThreads(serv,
          this.ns.getPlayer(),
-         Math.floor(this.ns.getServerMaxMoney(this.server) * this.percentStolen))
+         Math.floor(serv.moneyMax * this.percentStolen))
 
       ht = Math.floor(ht)
       let hackSecurityIncrase = calculateServerSecurityIncrease(ht, false)
@@ -298,6 +334,10 @@ export class Batcher {
 
    }
 
+   /**
+    * Return the ram cost per cycle
+    * @returns {number}
+    */
    getCycleRamCost() {
 
       let hackScriptCost = this.ns.getScriptRam(this.hackScript);
@@ -312,9 +352,13 @@ export class Batcher {
       return ht * hackScriptCost + wt1 * weakScriptCost + gt * growScriptCost + wt2 * weakScriptCost
    }
 
+   /**
+    * Return the total ram cost of the batcher
+    * @returns {any}
+    */
    getTotalRamCost() {
       let { depth, period } = this.getDepthAndPeriod();
-      return this.getCycleRamCost() * depth + this.ns.getScriptRam("main.js");
+      return this.getCycleRamCost() * depth;
    }
 
 
@@ -330,12 +374,23 @@ export class Batcher {
 
 
          if (Date.now() > lastStart + period) {
+
+
+            let delay = Date.now() - (lastStart + period)
+
+            if (lastStart == 0) {
+               delay = 0
+            }
+
             lastStart = Date.now()
 
             let { hack_delay, weak_delay_1, grow_delay, weak_delay_2 } = this.getDelays();
             let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
 
-            let b = new Batch(this.ns, this.server, hack_delay, weak_delay_1, grow_delay, weak_delay_2, this.t0, ht, wt1,
+            let b = new Batch(this.ns, this.server, Math.max(0, hack_delay - delay),
+               Math.max(weak_delay_1 - delay, 0),
+               Math.max(grow_delay - delay, 0),
+               Math.max(weak_delay_2 - delay, 0), this.t0, ht, wt1,
                gt, wt2, this.hackScript, this.growScript, this.weakScript, id);
 
             batches.push(b);
@@ -350,10 +405,6 @@ export class Batcher {
          }
 
          batches = batches.filter(b => !b.done)
-
-         //this.ns.print("Depth (?) = ", batches.length)
-
-
          await this.ns.sleep(this.t0);
 
       }
