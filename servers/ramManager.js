@@ -3,7 +3,7 @@ import { findAllRootServers, findAllServers } from "servers/findAllServers"
 
 /** @param {NS} ns */
 export function getTotalRam(ns) {
-   let servers = findAllServers(ns);
+   let servers = findAllRootServers(ns);
    let totalRam = 0;
 
    for (let i = 0; i < servers.length; i++) {
@@ -19,7 +19,7 @@ export function getTotalRam(ns) {
 
 /** @param {NS} ns */
 export function getTotalRamAvailable(ns) {
-   let servers = findAllServers(ns);
+   let servers = findAllRootServers(ns);
    let totalRam = 0;
 
    for (let i = 0; i < servers.length; i++) {
@@ -41,9 +41,7 @@ export function getTotalRamAvailable(ns) {
  * @returns {number}
  */
 export function execSomewhere(ns, script, threads, ...args) {
-
-
-   let servers = findAllServers(ns);
+   let servers = findAllRootServers(ns);
    let scriptRam = ns.getScriptRam(script)
 
    if (threads == 0) {

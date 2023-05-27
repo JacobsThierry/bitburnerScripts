@@ -257,7 +257,7 @@ export class Batcher {
    threadsCount() {
       let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
       let { depth, period } = this.getDepthAndPeriod();
-      return (ht + wt1 + gt + wt2) * depth
+      return ((ht + wt1 + gt + wt2) * depth)
    }
 
    /**
@@ -445,6 +445,7 @@ export class Batcher {
    loop() {
 
       if (!this.serverResetter.isDone()) {
+         this.serverResetter.maxThreads = this.threadsCount()
          this.serverResetter.loop()
          return;
       }

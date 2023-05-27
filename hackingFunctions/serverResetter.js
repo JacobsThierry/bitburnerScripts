@@ -41,7 +41,7 @@ export class serverResetter {
    }
 
    updateThreadList() {
-      this.threadList = this.threadList.filter(elem => elem[1] < Date.now())
+      this.threadList = this.threadList.filter(elem => elem[1] > Date.now())
    }
    addThreadList(nbThread, threadDuration) {
       this.threadList.push([nbThread, Date.now() + threadDuration])
@@ -51,7 +51,6 @@ export class serverResetter {
       this.updateThreadList()
       let currentThreads = this.threadList.reduce((accumulator, currentValue) => accumulator + currentValue[0], 0)
       let ret = this.maxThreads - currentThreads
-
       return ret
    }
 
@@ -124,11 +123,16 @@ export class serverResetter {
       if (this.gthread == 0) {
          this.state++;
       }
+
+
+
       let old = this.gthread
 
       let threadAvailable = this.getThreadsAvailable();
-      let temp = Math.min(threadAvailable, this.weakenThread)
-      let temp2 = execSomewhere(this.ns, this.weakScript, temp, this.server)
+
+
+      let temp = Math.min(threadAvailable, this.gthread)
+      let temp2 = execSomewhere(this.ns, this.growScript, temp, this.server)
       let executedThreads = temp - temp2;
 
       this.addThreadList(executedThreads, calculateGrowTime(this.ns.getServer(this.server), this.ns.getPlayer()))
@@ -137,7 +141,7 @@ export class serverResetter {
 
       this.gthread -= executedThreads;
       if (executedThreads > 0) {
-         let growSecurityIncrase = calculateServerSecurityIncrease(diff, true)
+         let growSecurityIncrase = calculateServerSecurityIncrease(executedThreads, true)
          this.weakenThread += getThreadsToWeaken(growSecurityIncrase, 1);
          this.state--;
       }

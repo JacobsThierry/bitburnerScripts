@@ -18,6 +18,7 @@ export async function main(ns) {
    ns.disableLog("scan")
    ns.disableLog("getServerMaxRam")
    ns.disableLog("getServerUsedRam")
+   //ns.enableLog("exec")
 
    ns.tail();
 
@@ -136,13 +137,14 @@ export async function main(ns) {
          batcher.loop()
 
 
-         ns.clearLog()
+
 
          str += batcher.toString()
 
       }
-      str += "\n TOTAL THREAD : " + getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true)
-      str += "\n=================\nTotal thread Available :" + (getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true) - sumThreadUsage(batchers))
+      str += "\n =================TOTAL THREAD : " + getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true)
+      str += "\nTotal thread Available :" + (getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true) - sumThreadUsage(batchers))
+      ns.clearLog()
       ns.print(str)
 
       clock = (clock + 1) % 500
