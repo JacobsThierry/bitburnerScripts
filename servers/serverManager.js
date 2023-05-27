@@ -1,4 +1,6 @@
 import { execSomewhere } from "servers/ramManager"
+import { myGetPurchaseServerCost } from "Formulas/getPurchaseServerCost"
+import { myGetPurchasedServerUpgradeCost } from "Formulas/getPurchasedServerUpgradeCost"
 
 let prefix = "pserv-"
 
@@ -26,7 +28,7 @@ function getServers(ns) {
 }
 
 /** @param {NS} ns */
-export async function serverManagerLoop(ns) {
+export function serverManagerLoop(ns) {
 
    let maxServers = ns.getPurchasedServerLimit();
    let maxRam = ns.getPurchasedServerMaxRam()
@@ -36,28 +38,28 @@ export async function serverManagerLoop(ns) {
 
    if (servers.length < maxServers) {
 
+
       for (let i = servers.length; i < maxServers; i++) {
+
+         let money = ns.getServer("home").moneyAvailable; //ns.getServerMoneyAvailable("home");
+         if (money < myGetPurchaseServerCost(ns, 8)) {
+            break;
+         }
+
          buyServer(ns, 8, i);
+         execSomewhere(ns, "servers/copyHacking.js", 1)
       }
-
-      while (!execSomewhere(ns, "servers/copyHacking.js", 1) != 0) {
-         await ns.sleep(100)
-      }
-
    }
 
    servers = getServers(ns);
-
-
    for (let ram = maxRam; ram > 8; ram = ram / 2) {
-
-
       for (let i = 0; i < servers.length; i++) {
-         let money = ns.getServerMoneyAvailable("home");
+         let money = ns.getServer("home").moneyAvailable;
          let serv = prefix + i;
 
-         if (ns.getPurchasedServerUpgradeCost(serv, ram) < money) {
+         if (myGetPurchasedServerUpgradeCost(ns, serv, ram) < money) {
             ns.upgradePurchasedServer(serv, ram);
+            ns.tprint("Upgraded server ", serv, " to ", ram, "GB");
          }
 
       }

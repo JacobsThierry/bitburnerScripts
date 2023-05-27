@@ -38,7 +38,7 @@ export async function resetServer(ns, server) {
 
    let growRatio = serv.moneyMax / serv.moneyAvailable;
 
-   let gthread = Math.ceil(growthAnalyzeThreads(serv, ns.getPlayer(), growRatio, 1));
+   let gthread = Math.ceil(growthAnalyzeThreads(ns, serv, ns.getPlayer(), growRatio, 1));
    let growSecurityIncrase = calculateServerSecurityIncrease(gthread, true)
 
    ns.print("Running batch of grow")

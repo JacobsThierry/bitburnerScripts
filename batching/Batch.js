@@ -66,6 +66,11 @@ export class Batch {
       this.done = false;
    }
 
+   selfDestroy() {
+      this.done = true;
+      this.hdelay = 9999999;
+      this.gdelay = 9999999;
+   }
 
    update() {
 
@@ -97,6 +102,7 @@ export class Batch {
             this.ns.print("All weaken 1 threads with the id ", this.id, " have been started")
          } else {
             this.ns.print("Not all weaken 1 threads with the id ", this.id, " have been started")
+            this.selfDestroy()
          }
 
          this.weak1Started = true
@@ -125,6 +131,7 @@ export class Batch {
             this.ns.print("All weaken 2 threads with the id ", this.id, " have been started")
          } else {
             this.ns.print("Not all weaken 2 threads with the id ", this.id, " have been started")
+            this.selfDestroy()
          }
 
          this.weak2Started = true;
@@ -220,6 +227,16 @@ export class Batcher {
 
       return out
 
+   }
+
+   /**
+    * Sum of all the threads used by the script
+    * @returns {number}
+    */
+   threadsCount() {
+      let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
+      let { depth, period } = this.getDepthAndPeriod();
+      return (ht + wt1 + gt + wt2) * depth
    }
 
    /**
@@ -337,7 +354,7 @@ export class Batcher {
       serv.hackDifficulty = serv.minDifficulty //this.ns.getServerMinSecurityLevel(this.server)
 
       //How many thread to steal percentSolen% of the cash
-      ht = hackAnalThreads(serv,
+      ht = hackAnalThreads(this.ns, serv,
          this.ns.getPlayer(),
          Math.floor(serv.moneyMax * this.percentStolen))
 
@@ -346,13 +363,13 @@ export class Batcher {
       hackSecurityIncrase *= 1.1
 
       //How many thread to double the cash
-      gt = growthAnalyzeThreads(serv, this.ns.getPlayer(), 1 / (1 - this.percentStolen), 1)
+      gt = growthAnalyzeThreads(this.ns, serv, this.ns.getPlayer(), 1 / (1 - this.percentStolen), 1)
       gt = Math.ceil(gt)
       let growSecurityIncrase = calculateServerSecurityIncrease(gt, true)
       growSecurityIncrase *= 1.1
 
-      wt1 = getThreadsToWeaken(hackSecurityIncrase, 1) + 1;
-      wt2 = getThreadsToWeaken(growSecurityIncrase, 1) + 1;
+      wt1 = getThreadsToWeaken(hackSecurityIncrase, 1);
+      wt2 = getThreadsToWeaken(growSecurityIncrase, 1);
 
       wt1 = Math.ceil(wt1)
       wt2 = Math.ceil(wt2)

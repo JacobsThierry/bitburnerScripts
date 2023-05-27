@@ -14,6 +14,6 @@ export async function main(ns) {
    await ns.hack(ns.args[0]);
    ns.print("Done");
 
-   ns.tprint("Done hacking ", ns.args[2])
+   //ns.tprint("Done hacking ", ns.args[2])
 
 }

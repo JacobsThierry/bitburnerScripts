@@ -1,16 +1,21 @@
+import { myGetBitNodeMultipliers } from "Formulas/bitNode/getBitNodeMultipliers"
+
 /**
  * Description
+ * @param {NS} ns
  * @param {Server} server
  * @param {IPerson} person
  * @returns {number}
  */
-export function calculatePercentMoneyHacked(server, person) {
+export function calculatePercentMoneyHacked(ns, server, person) {
    // Adjust if needed for balancing. This is the divisor for the final calculation
    const balanceFactor = 240;
 
    let bnm = 0
    try {
-      bnm = BitNodeMultipliers.ScriptHackMoney;
+      let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+      bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+      bnm = bitNodeMultipliers.ScriptHackMoney;
    } catch {
       bnm = 1;
    }

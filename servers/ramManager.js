@@ -1,5 +1,5 @@
 
-import { findAllServers } from "servers/findAllServers"
+import { findAllRootServers, findAllServers } from "servers/findAllServers"
 
 /** @param {NS} ns */
 export function getTotalRam(ns) {
@@ -65,8 +65,9 @@ export function execSomewhere(ns, script, threads, ...args) {
 
 
       if (threadRoom > 0) {
-         ns.exec(script, serv, threadRoom, ...args)
-         threads -= threadRoom;
+         if (ns.exec(script, serv, threadRoom, ...args) > 0) {
+            threads -= threadRoom;
+         }
       }
 
       if (threads == 0) {
@@ -80,8 +81,8 @@ export function execSomewhere(ns, script, threads, ...args) {
 }
 
 /** @param {NS} ns */
-export function getMaximumInstanceOfScript(ns, script) {
-   let servers = findAllServers(ns);
+export function getMaximumInstanceOfScript(ns, script, ignoreCurrentUsage = false) {
+   let servers = findAllRootServers(ns)
    let scriptRam = ns.getScriptRam(script)
    let instances = 0;
 
@@ -94,7 +95,10 @@ export function getMaximumInstanceOfScript(ns, script) {
          continue
       }
 
-      let ramAvailable = ns.getServerMaxRam(serv) - ns.getServerUsedRam(serv);
+      let ramAvailable = ns.getServerMaxRam(serv);
+      if (ignoreCurrentUsage) {
+         ramAvailable -= ns.getServerUsedRam(serv)
+      }
 
       if (serv == "home") {
          ramAvailable -= 8;

@@ -1,5 +1,6 @@
 import { Batcher } from "batching/Batch";
 import { getMaximumInstanceOfScript } from "servers/ramManager"
+import { findAllRootServers } from "servers/findAllServers"
 
 /**
  * Description
@@ -18,19 +19,20 @@ function getBatcherThreadCount(batcher) {
  * Description
  * @param {NS} ns
  * @param {Batcher} batcher
- * * @param {number} maxloop
+ * @param {number} maxThreads
  * @returns {Batcher}
  */
-export function optimizeBatch(ns, batcher, maxloop = 10000) {
+export function optimizeBatch(ns, batcher, maxThreads = -1) {
 
-   let maxInstance = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
-
+   if (maxThreads == -1) {
+      maxThreads = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
+   }
    batcher.percentStolen = 0.5;
-   batcher.t0 = 500;
+   batcher.t0 = 200;
 
-
+   let maxloop = 10000
    let clock = 0;
-   while (getBatcherThreadCount(batcher) > maxInstance) {
+   while (getBatcherThreadCount(batcher) > maxThreads && maxloop-- > 0) {
       if (clock == 0) {
          batcher.percentStolen *= 0.9;
       } else {
@@ -39,22 +41,42 @@ export function optimizeBatch(ns, batcher, maxloop = 10000) {
       clock = (clock + 1) % 2
    }
 
-   /*
-      //revert last change
-      if (clock == 1) {
-         batcher.percentStolen /= 0.9;
-      } else {
-         batcher.t0 = batcher.t0 - 10;
-      }
-   */
+   if (maxloop == 0) {
+      return false
+   }
+
    return batcher
+
+}
+
+/** @param {NS} ns */
+export function findBestServers(ns, examptList = ["home"]) {
+   let servers = findAllRootServers(ns);
+
+   servers = servers.filter(serv => !(examptList.includes(serv)));
+
+   let revenues = []
+
+   let maxInstance = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true)
+
+   for (let i = 0; i < servers.length; i++) {
+      let serv = servers[i]
+      let b = new Batcher(ns, serv, 0.5, 200);
+      b = optimizeBatch(ns, b, maxInstance);
+      revenues.push([serv, b.getRevenues()])
+   }
+
+   revenues = revenues.sort((a, b) => b[1] - a[1]);
+
+   return revenues;
+
+
+
 
 }
 
 
 /** @param {NS} ns */
 export async function main(ns) {
-
-
 
 }

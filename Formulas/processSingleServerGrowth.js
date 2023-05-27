@@ -2,13 +2,14 @@
 import { calculateServerGrowth } from "Formulas/calculateServerGrowth"
 /**
  * Applied server growth for a single server. Returns the percentage growth
+ * @param {NS} ns
  * @param {Server} server
  * @param {number} threads
  * @param {number} cores
  * @returns {number}
  */
-export function processSingleServerGrowth(server, threads, cores = 1) {
-   let serverGrowth = calculateServerGrowth(server, threads, Player, cores);
+export function processSingleServerGrowth(ns, server, threads, cores = 1) {
+   let serverGrowth = calculateServerGrowth(ns, server, threads, Player, cores);
    if (serverGrowth < 1) {
       serverGrowth = 1;
    }

@@ -14,6 +14,6 @@ export async function main(ns) {
    await ns.grow(ns.args[0]);
    ns.print("Done");
 
-   ns.tprint("Done growing ", ns.args[2])
+   //ns.tprint("Done growing ", ns.args[2])
 
 }  

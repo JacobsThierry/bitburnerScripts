@@ -3,13 +3,14 @@ import { CONSTANTS } from "Formulas/constant"
 /**
  * Returns the number of "growth cycles" needed to grow the specified server by the
  * specified amount.
+ * @param {NS} ns
  * @param {Server} server
  * @param {IPerson} player
  * @param {number} growth
  * @param {number} cores=1
  * @returns {number}
  */
-export function numCycleForGrowth(server, player, growth, cores = 1) {
+export function numCycleForGrowth(ns, server, player, growth, cores = 1) {
    let ajdGrowthRate = 1 + (CONSTANTS.ServerBaseGrowthRate - 1) / server.hackDifficulty;
    if (ajdGrowthRate > CONSTANTS.ServerMaxGrowthRate) {
       ajdGrowthRate = CONSTANTS.ServerMaxGrowthRate;
@@ -22,7 +23,9 @@ export function numCycleForGrowth(server, player, growth, cores = 1) {
 
    let bnm = 0
    try {
-      bnm = BitNodeMultipliers.ServerGrowthRate;
+      let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+      bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+      bnm = bitNodeMultipliers.ServerGrowthRate;
    } catch {
       bnm = 1;
    }
