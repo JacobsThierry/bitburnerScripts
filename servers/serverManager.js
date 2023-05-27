@@ -13,7 +13,6 @@ let prefix = "pserv-"
  */
 function buyServer(ns, ram, id) {
    let serverName = prefix + id;
-
    execSomewhere(ns, "/servers/purchaseServer.js", 1, serverName, ram);
 
 }
@@ -41,7 +40,6 @@ export function serverManagerLoop(ns) {
 
 
       for (let i = servers.length; i < maxServers; i++) {
-
          let money = ns.getServerMoneyAvailable("home")
          if (money < myGetPurchaseServerCost(ns, 8)) {
             break;

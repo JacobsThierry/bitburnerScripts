@@ -9,7 +9,10 @@ export async function main(ns) {
       let servername = ns.args[0];
       let ram = ns.args[1];
 
-      ns.purchaseServer(servername, ram);
+      let boo = ns.purchaseServer(servername, ram);
+      if (boo) {
+         ns.tprint("Purchased server ", servername)
+      }
 
    }
 

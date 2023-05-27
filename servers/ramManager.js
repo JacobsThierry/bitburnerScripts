@@ -46,6 +46,10 @@ export function execSomewhere(ns, script, threads, ...args) {
    let servers = findAllServers(ns);
    let scriptRam = ns.getScriptRam(script)
 
+   if (threads == 0) {
+      return 0
+   }
+
    for (let i = 0; i < servers.length; i++) {
 
       let serv = servers[i]

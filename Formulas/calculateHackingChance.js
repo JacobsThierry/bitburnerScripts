@@ -1,3 +1,5 @@
+import { calculateIntelligenceBonus } from "Formulas/calculateIntelligenceBonus"
+
 /**
  * Returns the chance the person has to successfully hack a server
  * @param {Server} server

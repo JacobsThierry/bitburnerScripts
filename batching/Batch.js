@@ -8,6 +8,8 @@ import { growthAnalyzeThreads } from "Formulas/growthAnalyzeThreads"
 import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 
 import { serverResetter } from "hackingFunctions/serverResetter"
+import { calculatePercentMoneyHacked } from "Formulas/calculatePercentMoneyHacked"
+import { calculateHackingChance } from "Formulas/calculateHackingChance"
 
 export class Batch {
 
@@ -71,6 +73,8 @@ export class Batch {
 
    selfDestroy() {
       this.done = true;
+      this.hackStarted = true;
+      this.growStarted = true;
       this.hdelay = 9999999;
       this.gdelay = 9999999;
       this.dieTime = Date.now()
@@ -101,6 +105,12 @@ export class Batch {
 
       if (!this.weak1Started && weaktimeRemaining < this.t0) {
          let w1ok = execSomewhere(this.ns, this.weakScript, this.w1thread, this.server, weaktimeRemaining, this.id);
+
+         //In case the game freez and the weak is too late
+         if (weaktimeRemaining < -this.t0) {
+            this.selfDestroy()
+            this.ns.print("Canceled batch ", this.id, " because it is late")
+         }
 
          if (w1ok == 0) {
             this.ns.print("All weaken 1 threads with the id ", this.id, " have been started")
@@ -133,6 +143,13 @@ export class Batch {
       let weaktime2Remaining = weaken2time - Date.now();
 
       if (!this.weak2Started && weaktime2Remaining < this.t0) {
+
+         //In case the game freez and the weak is too late
+         if (weaktime2Remaining < -this.t0) {
+            this.selfDestroy()
+            this.ns.print("Canceled batch ", this.id, " because it is late")
+         }
+
          let w2ok = execSomewhere(this.ns, this.weakScript, this.w2thread, this.server, weaktime2Remaining, this.id);
          if (w2ok == 0) {
             this.ns.print("All weaken 2 threads with the id ", this.id, " have been started")
@@ -257,11 +274,19 @@ export class Batcher {
 
       let { depth, period } = this.getDepthAndPeriod();
       let serv = this.ns.getServer(this.server)
+      serv.moneyAvailable = serv.moneyMax
+      serv.hackDifficulty = serv.minDifficulty
 
-      let moneyPerPeriod = serv.moneyMax * this.percentStolen
+      if (serv.requiredHackingSkill > this.ns.getPlayer().skills.hacking) {
+         return 0
+      }
+
+      let moneyPerPeriod = Math.min(Math.floor(serv.moneyMax * calculatePercentMoneyHacked(this.ns, serv, this.ns.getPlayer())) * ht, serv.moneyMax)
 
       let periodSec = period * 0.001;
       let moneyPerSec = moneyPerPeriod / periodSec;
+
+      moneyPerSec = moneyPerSec * calculateHackingChance(serv, this.ns.getPlayer())
 
       return moneyPerSec;
 

@@ -48,14 +48,17 @@ export async function main(ns) {
 
 
    let batchers = []
+   //Forcing the n00dle
+   let b = new Batcher(ns, "n00dles", 0.5, 200);
+   b = optimizeBatch(ns, b);
+   batchers.push(b);
 
    /*let bestServers = findBestServers(ns);
 
-   let b = new Batcher(ns, "n00dles", 0.5, 200);
-   b = optimizeBatch(ns, b);
+   
    ns.print(b.toString())
 
-   batchers.push(b);
+   
 */
    let clock = 0;
 
@@ -64,19 +67,19 @@ export async function main(ns) {
 
       //to reduce the lag we only do some things every so often
       if (clock == 0) {
+
+
+
          openAllPorts(ns);
          serverManagerLoop(ns);
          //Optimizing the currently running batches
-         let totalThreadsAvailable = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
-         for (let i = 0; i < batchers.length; i++) {
-            let batcher = batchers[i]
-            totalThreadsAvailable -= batcher.threadsCount()
-         }
+         let totalThreadsAvailable = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true) - sumThreadUsage(batchers)
+
 
 
          opt: for (let i = 0; i < batchers.length; i++) {
 
-            if (totalThreadsAvailable < 100) {
+            if (totalThreadsAvailable < 50) {
                break opt;
             }
 
@@ -98,15 +101,20 @@ export async function main(ns) {
          if (nonMaxed.length == 0) {
 
 
+
             let bestServers = findBestServers(ns);
+
             //Filtering the server that are alredy hacked in the most discusting way I can think of
-            bestServers = bestServers.filter(serv => !batchers.some(batcher => batcher.server == serv[0]))
+            bestServers = bestServers.filter(serv => !(batchers.some(batcher => batcher.server == serv.server)))
+
+            //ns.tprint(bestServers.toString())
+
 
             let maxThread = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true) - sumThreadUsage(batchers)
 
 
-            let b = new Batcher(ns, bestServers[0][0], 0.5, 200)
-            b = optimizeBatch(ns, b, maxThread)
+            let b = bestServers[0][0]
+            //ns.tprint(b.toString())
 
             let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
 
@@ -126,7 +134,6 @@ export async function main(ns) {
 
 
          str += "Total thread Available : " + getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
-
          str += batcher.toString()
 
       }

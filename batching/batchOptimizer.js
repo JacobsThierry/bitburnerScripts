@@ -42,20 +42,24 @@ export function optimizeBatch(ns, batcher, maxThreads = -1) {
    batcher.percentStolen = maxPercentStolen;
    batcher.t0 = maxT0;
 
-   let maxloop = 10000
+   let maxloop = 100000
    let clock = 0;
-   while (getBatcherThreadCount(batcher) > maxThreads && maxloop-- > 0) {
+   do {
       if (clock == 0) {
          batcher.percentStolen *= 0.9;
       } else {
-         batcher.t0 = batcher.t0 + 10;
+         batcher.t0 = batcher.t0 + 100;
       }
-      clock = (clock + 1) % 2
-   }
 
-   if (maxloop == 0) {
-      return false
-   }
+      let { ht, wt1, gt, wt2 } = batcher.getThreadsPerCycle();
+
+      if (ht == 0) {
+         return batcher
+      }
+
+
+      clock = (clock + 1) % 2
+   } while (getBatcherThreadCount(batcher) > maxThreads && maxloop-- > 0)
 
    return batcher
 
@@ -75,7 +79,11 @@ export function findBestServers(ns, examptList = ["home"]) {
       let serv = servers[i]
       let b = new Batcher(ns, serv, 0.5, 200);
       b = optimizeBatch(ns, b, maxInstance);
-      revenues.push([serv, b.getRevenues()])
+
+
+
+      revenues.push([b, b.getRevenues() / b.threadsCount()])
+
    }
 
    revenues = revenues.sort((a, b) => b[1] - a[1]);
