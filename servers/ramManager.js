@@ -42,6 +42,10 @@ export function getTotalRamAvailable(ns) {
  */
 export function execSomewhere(ns, script, threads, ...args) {
    let servers = findAllRootServers(ns);
+
+   servers = servers.filter(el => el != "home")
+   servers.push("home");
+
    let scriptRam = ns.getScriptRam(script)
 
    if (threads == 0) {
@@ -101,17 +105,15 @@ export function getMaximumInstanceOfScript(ns, script, ignoreCurrentUsage = fals
       if (!ignoreCurrentUsage) {
          ramAvailable -= ns.getServerUsedRam(serv)
       }
-
-      if (serv == "home") {
-         ramAvailable -= 8;
-      }
-
+      /*
+            if (serv == "home") {
+               ramAvailable -= 8;
+            }
+      */
       let threadRoom = Math.floor(ramAvailable / scriptRam);
-
       if (threadRoom > 0) {
          instances += threadRoom;
       }
-
 
 
    }

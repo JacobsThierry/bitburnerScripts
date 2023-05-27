@@ -93,7 +93,7 @@ export class Batch {
          if (hackok == 0) {
             this.ns.print("All hack threads with the id ", this.id, " have been started")
          } else {
-            this.ns.print("Not all hack threads with the id ", this.id, " have been started")
+            this.ns.tprint("Not all hack threads with the id ", this.id, " have been started")
          }
          this.dieTime = Date.now() + this.hacktime;
          this.hackStarted = true
@@ -109,7 +109,7 @@ export class Batch {
          //In case the game freez and the weak is too late
          if (weaktimeRemaining < -this.t0) {
             this.selfDestroy()
-            this.ns.print("Canceled batch ", this.id, " because it is late")
+            this.ns.tprint("Canceled batch ", this.id, " because it is late")
          }
 
          if (w1ok == 0) {
@@ -118,7 +118,7 @@ export class Batch {
 
 
          } else {
-            this.ns.print("Not all weaken 1 threads with the id ", this.id, " have been started")
+            this.ns.tprint("Not all weaken 1 threads with the id ", this.id, " have been started")
             this.selfDestroy()
          }
 
@@ -134,7 +134,7 @@ export class Batch {
          if (gok == 0) {
             this.ns.print("All grow threads with the id ", this.id, " have been started")
          } else {
-            this.ns.print("Not all grow threads with the id ", this.id, " have been started")
+            this.ns.tprint("Not all grow threads with the id ", this.id, " have been started")
          }
          this.growStarted = true;
       }
@@ -147,14 +147,14 @@ export class Batch {
          //In case the game freez and the weak is too late
          if (weaktime2Remaining < -this.t0) {
             this.selfDestroy()
-            this.ns.print("Canceled batch ", this.id, " because it is late")
+            this.ns.tprint("Canceled batch ", this.id, " because it is late")
          }
 
          let w2ok = execSomewhere(this.ns, this.weakScript, this.w2thread, this.server, weaktime2Remaining, this.id);
          if (w2ok == 0) {
             this.ns.print("All weaken 2 threads with the id ", this.id, " have been started")
          } else {
-            this.ns.print("Not all weaken 2 threads with the id ", this.id, " have been started")
+            this.ns.tprint("Not all weaken 2 threads with the id ", this.id, " have been started")
             this.selfDestroy()
          }
 
