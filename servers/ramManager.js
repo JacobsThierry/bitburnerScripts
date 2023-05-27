@@ -100,7 +100,7 @@ export function getMaximumInstanceOfScript(ns, script, ignoreCurrentUsage = fals
       }
 
       let ramAvailable = ns.getServerMaxRam(serv);
-      if (ignoreCurrentUsage) {
+      if (!ignoreCurrentUsage) {
          ramAvailable -= ns.getServerUsedRam(serv)
       }
 

@@ -21,6 +21,8 @@ export class serverResetter {
 
       let serv = ns.getServer(server)
       this.weakenThread = getThreadsToWeaken(serv.hackDifficulty - serv.minDifficulty, 1);
+
+
       this.gthread = -1;
 
       this.state = 0
@@ -31,6 +33,7 @@ export class serverResetter {
       this.waitTime = -1
 
       this.threadList = []
+      this.maxThreads = maxThreads
 
       if (serv.moneyMax == serv.moneyAvailable && serv.hackDifficulty == serv.minDifficulty) {
          this.state = 5
@@ -47,7 +50,9 @@ export class serverResetter {
    getThreadsAvailable() {
       this.updateThreadList()
       let currentThreads = this.threadList.reduce((accumulator, currentValue) => accumulator + currentValue[0], 0)
-      return maxThreads - currentThreads
+      let ret = this.maxThreads - currentThreads
+
+      return ret
    }
 
    stateMessage() {
@@ -75,7 +80,9 @@ export class serverResetter {
 
       let threadAvailable = this.getThreadsAvailable();
       let temp = Math.min(threadAvailable, this.weakenThread)
+
       let temp2 = execSomewhere(this.ns, this.weakScript, temp, this.server)
+
       let executedThreads = temp - temp2;
       this.addThreadList(executedThreads, calculateWeakenTime(this.ns.getServer(this.server), this.ns.getPlayer()))
 
