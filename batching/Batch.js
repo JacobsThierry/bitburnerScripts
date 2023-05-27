@@ -7,6 +7,7 @@ import { hackAnalyzeThreads as hackAnalThreads } from "Formulas/hackAnalyzeThrea
 import { growthAnalyzeThreads } from "Formulas/growthAnalyzeThreads"
 import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 
+import { serverResetter } from "hackingFunctions/serverResetter"
 
 export class Batch {
 
@@ -30,7 +31,7 @@ export class Batch {
     * @param {any} id
     * @returns {any}
     */
-   constructor(ns, server, hdelay, w1delay, gdelay, w2delay, t0, hthread, w1thread, gthread, w2thread, hackScript, growScript, weakScript, id) {
+   constructor(ns, server, hdelay, w1delay, gdelay, w2delay, t0, hthread, w1thread, gthread, w2thread, hackScript, growScript, weakScript, hacktime, id) {
 
       this.ns = ns;
       this.server = server;
@@ -64,12 +65,15 @@ export class Batch {
 
       this.startTime = Date.now();
       this.done = false;
+      this.dieTime = -1
+      this.hacktime = hacktime
    }
 
    selfDestroy() {
       this.done = true;
       this.hdelay = 9999999;
       this.gdelay = 9999999;
+      this.dieTime = Date.now()
    }
 
    update() {
@@ -87,7 +91,7 @@ export class Batch {
          } else {
             this.ns.print("Not all hack threads with the id ", this.id, " have been started")
          }
-
+         this.dieTime = Date.now() + this.hacktime;
          this.hackStarted = true
       }
 
@@ -100,6 +104,9 @@ export class Batch {
 
          if (w1ok == 0) {
             this.ns.print("All weaken 1 threads with the id ", this.id, " have been started")
+
+
+
          } else {
             this.ns.print("Not all weaken 1 threads with the id ", this.id, " have been started")
             this.selfDestroy()
@@ -138,29 +145,9 @@ export class Batch {
 
       }
 
-      if (this.hackStarted && this.weak1Started && this.growStarted && this.weak2Started) {
+      if (this.hackStarted && this.weak1Started && this.growStarted && this.weak2Started && Date.now() > this.dieTime) {
          this.done = true;
       }
-      /*
-            this.ns.tprint(
-               "\nId = ", this.id,
-               "\nhacktime = ", hacktime,
-               "\nweaktime1 = ", weaken1time,
-               "\ngrow time = ", growTime,
-               "\n weaktime2 = ", weaken2time
-            )
-      */
-      /*
-            if (this.id == 0) {
-               this.ns.tprint(
-                  "\nId = ", this.id,
-                  "\nhacktimeRemaining = ", hacktimeRemaining,
-                  "\nweaktime1Remaining = ", weaktimeRemaining,
-                  "\ngrow time remaining = ", growtimeRemaining,
-                  "\n weaktime2  remaining = ", weaktime2Remaining
-               )
-            }
-      */
    }
 
 }
@@ -183,23 +170,40 @@ export class Batcher {
       this.id = 0
       this.batches = []
       this.lastStart = 0;
+
+      this.serverResetter = new serverResetter(ns, server, this.threadsCount())
    }
 
    toString() {
-      let out = ""
+      let out = "\n======================================\n"
       out += "Server = " + this.server + "\n"
       out += "T0 = " + this.ns.tFormat(this.t0, 3) + "\n"
       out += "Max depth = " + this.max_depth + "\n"
       out += "Percent stolent = " + this.percentStolen + "\n"
 
 
+
       let { depth, period } = this.getDepthAndPeriod();
-      out += "Depth = " + depth + " ; Period = " + this.ns.tFormat(period, 3) + "\n\n"
+
+      if (period != undefined) {
+
+         out += "Depth = " + depth + " ; Period = " + this.ns.tFormat(period, 3) + "\n"
+      }
+
+      out += "Started : " + this.serverResetter.isDone()
+
+      if (!this.serverResetter.isDone()) {
+         out += " (state " + this.serverResetter.state + "/" + serverResetter.maxState + ")"
+      }
+
+      out += "\n\n"
+
+      out += "Current depth* = " + this.batches.length + "\n"
 
       let serv = this.ns.getServer(this.server);
       serv.hackDifficulty = serv.minDifficulty //this.ns.getServerMinSecurityLevel(this.server)
 
-      out += "Times : \n"
+      out += "\nTimes : \n"
       let { weak_time, grow_time, hack_time } = this.times()
       out += "\t Hacking time = " + this.ns.tFormat(hack_time, 5) + "\n"
       out += "\t Grow time = " + this.ns.tFormat(grow_time, 5) + "\n"
@@ -216,11 +220,11 @@ export class Batcher {
 
 
       out += "\n"
-      out += "Estimated revenues : " + this.getRevenues() + "\n";
+      out += "Estimated revenues per sec : " + this.ns.formatNumber(this.getRevenues()) + "\n";
 
-      out += "Ram per cycle : " + this.getCycleRamCost() + "\n";
+      out += "Ram per cycle : " + this.ns.formatRam(this.getCycleRamCost()) + "\n";
 
-      out += "Total ram cost : " + this.getTotalRamCost() + "\n";
+      out += "Total ram cost : " + this.ns.formatRam(this.getTotalRamCost()) + "\n";
       out += "Total thread count : " + ((ht + wt1 + gt + wt2) * depth) + "\n"
 
 
@@ -244,6 +248,12 @@ export class Batcher {
     * @returns {number}
     */
    getRevenues() {
+
+      let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
+
+      if (ht == 0) {
+         return 0
+      }
 
       let { depth, period } = this.getDepthAndPeriod();
       let serv = this.ns.getServer(this.server)
@@ -352,6 +362,7 @@ export class Batcher {
 
       let serv = this.ns.getServer(this.server);
       serv.hackDifficulty = serv.minDifficulty //this.ns.getServerMinSecurityLevel(this.server)
+      serv.moneyAvailable = serv.moneyMax
 
       //How many thread to steal percentSolen% of the cash
       ht = hackAnalThreads(this.ns, serv,
@@ -408,16 +419,20 @@ export class Batcher {
 
    loop() {
 
+      if (!this.serverResetter.isDone()) {
+         this.serverResetter.loop()
+         return;
+      }
+
+
       let { depth, period } = this.getDepthAndPeriod();
+      let { weak_time, grow_time, hack_time } = this.times()
+
       let delay = Date.now() - (this.lastStart + period)
 
 
+
       if (Date.now() > (this.lastStart + period)) {
-
-
-
-
-
 
          if (this.lastStart == 0) {
             delay = 0
@@ -432,7 +447,7 @@ export class Batcher {
             Math.max(weak_delay_1 - delay, 0),
             Math.max(grow_delay - delay, 0),
             Math.max(weak_delay_2 - delay, 0), this.t0, ht, wt1,
-            gt, wt2, this.hackScript, this.growScript, this.weakScript, this.id);
+            gt, wt2, this.hackScript, this.growScript, this.weakScript, hack_time, this.id);
 
          this.batches.push(b);
          this.id++;

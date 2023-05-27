@@ -1,6 +1,6 @@
 import { Batcher } from "batching/Batch";
 import { getMaximumInstanceOfScript } from "servers/ramManager"
-import { findAllRootServers } from "servers/findAllServers"
+import { findAllRootServers, findAllServers } from "servers/findAllServers"
 
 /**
  * Description
@@ -15,6 +15,18 @@ function getBatcherThreadCount(batcher) {
    return (ht + wt1 + gt + wt2) * depth;
 }
 
+let maxPercentStolen = 0.5;
+let maxT0 = 200;
+
+/**
+ * Description
+ * @param {Batcher} batcher
+ * @returns {any}
+ */
+export function isMaxed(batcher) {
+   return batcher.t0 == maxT0 && batcher.percentStolen == maxPercentStolen
+}
+
 /**
  * Description
  * @param {NS} ns
@@ -27,8 +39,8 @@ export function optimizeBatch(ns, batcher, maxThreads = -1) {
    if (maxThreads == -1) {
       maxThreads = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
    }
-   batcher.percentStolen = 0.5;
-   batcher.t0 = 200;
+   batcher.percentStolen = maxPercentStolen;
+   batcher.t0 = maxT0;
 
    let maxloop = 10000
    let clock = 0;
@@ -51,7 +63,7 @@ export function optimizeBatch(ns, batcher, maxThreads = -1) {
 
 /** @param {NS} ns */
 export function findBestServers(ns, examptList = ["home"]) {
-   let servers = findAllRootServers(ns);
+   let servers = findAllRootServers(ns)
 
    servers = servers.filter(serv => !(examptList.includes(serv)));
 

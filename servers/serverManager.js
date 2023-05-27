@@ -36,12 +36,13 @@ export function serverManagerLoop(ns) {
    let servers = getServers(ns);
 
 
+
    if (servers.length < maxServers) {
 
 
       for (let i = servers.length; i < maxServers; i++) {
 
-         let money = ns.getServer("home").moneyAvailable; //ns.getServerMoneyAvailable("home");
+         let money = ns.getServerMoneyAvailable("home")
          if (money < myGetPurchaseServerCost(ns, 8)) {
             break;
          }
@@ -54,10 +55,10 @@ export function serverManagerLoop(ns) {
    servers = getServers(ns);
    for (let ram = maxRam; ram > 8; ram = ram / 2) {
       for (let i = 0; i < servers.length; i++) {
-         let money = ns.getServer("home").moneyAvailable;
+         let money = ns.getServerMoneyAvailable("home")
          let serv = prefix + i;
 
-         if (myGetPurchasedServerUpgradeCost(ns, serv, ram) < money) {
+         if (myGetPurchasedServerUpgradeCost(ns, serv, ram) < money && ram > ns.getServer(serv).maxRam) {
             ns.upgradePurchasedServer(serv, ram);
             ns.tprint("Upgraded server ", serv, " to ", ram, "GB");
          }
