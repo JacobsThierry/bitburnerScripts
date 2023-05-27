@@ -5,7 +5,7 @@ import { findAllRootServers } from "servers/findAllServers"
 import { execSomewhere } from "servers/ramManager"
 import { serverManagerLoop } from "servers/serverManager"
 
-import { optimizeBatch } from "batching/batchStarter"
+import { optimizeBatch } from "batching/batchOptimizer"
 
 import { resetServer } from "hackingFunctions/resetServer"
 
@@ -61,9 +61,12 @@ export async function main(ns) {
 
 
    while (true) {
+
+      execSomewhere(ns, "servers/portOpener.js", 1)
+
       await serverManagerLoop(ns);
       b.loop(ns);
-      await ns.sleep(t0);
+      await ns.sleep(t0 / 2);
    }
 
 

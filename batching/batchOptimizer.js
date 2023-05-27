@@ -26,7 +26,7 @@ export function optimizeBatch(ns, batcher, maxloop = 10000) {
    let maxInstance = getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js")
 
    batcher.percentStolen = 0.5;
-   batcher.t0 = 200;
+   batcher.t0 = 500;
 
 
    let clock = 0;

@@ -34,11 +34,14 @@ export class Batch {
 
       this.ns = ns;
       this.server = server;
+
       this.hdelay = hdelay;
       this.w1delay = w1delay;
       this.gdelay = gdelay;
       this.w2delay = w2delay
+
       this.t0 = t0;
+
       this.hthread = hthread;
       this.w1thread = w1thread;
       this.gthread = gthread;
@@ -47,6 +50,8 @@ export class Batch {
       this.hackScript = hackScript
       this.growScript = growScript
       this.weakScript = weakScript
+
+      //this.ns.tprint("Delays = ", this.ns.tFormat(hdelay), " ", this.ns.tFormat(w1delay), " ", this.ns.tFormat(gdelay), " ", this.ns.tFormat(w2delay))
 
 
       this.id = id;
@@ -64,14 +69,12 @@ export class Batch {
 
    update() {
 
-      let now = Date.now();
 
       let hacktime = this.startTime + this.hdelay;
-      let hacktimeRemaining = hacktime - now;
+      let hacktimeRemaining = hacktime - Date.now();
 
 
-
-      if (!this.hackStarted && hacktimeRemaining < this.t0) {
+      if ((!this.hackStarted) && (hacktimeRemaining < this.t0)) {
 
          let hackok = execSomewhere(this.ns, this.hackScript, this.hthread, this.server, hacktimeRemaining, this.id);
          if (hackok == 0) {
@@ -83,10 +86,9 @@ export class Batch {
          this.hackStarted = true
       }
 
+
       let weaken1time = this.startTime + this.w1delay;
-      let weaktimeRemaining = weaken1time - now;
-
-
+      let weaktimeRemaining = weaken1time - Date.now();
 
       if (!this.weak1Started && weaktimeRemaining < this.t0) {
          let w1ok = execSomewhere(this.ns, this.weakScript, this.w1thread, this.server, weaktimeRemaining, this.id);
@@ -101,7 +103,7 @@ export class Batch {
       }
 
       let growTime = this.startTime + this.gdelay;
-      let growtimeRemaining = growTime - now;
+      let growtimeRemaining = growTime - Date.now();
 
       if (!this.growStarted && growtimeRemaining < this.t0) {
          let gok = execSomewhere(this.ns, this.growScript, this.gthread, this.server, growtimeRemaining, this.id);
@@ -115,7 +117,7 @@ export class Batch {
       }
 
       let weaken2time = this.startTime + this.w2delay
-      let weaktime2Remaining = weaken2time - now;
+      let weaktime2Remaining = weaken2time - Date.now();
 
       if (!this.weak2Started && weaktime2Remaining < this.t0) {
          let w2ok = execSomewhere(this.ns, this.weakScript, this.w2thread, this.server, weaktime2Remaining, this.id);
@@ -132,7 +134,26 @@ export class Batch {
       if (this.hackStarted && this.weak1Started && this.growStarted && this.weak2Started) {
          this.done = true;
       }
-
+      /*
+            this.ns.tprint(
+               "\nId = ", this.id,
+               "\nhacktime = ", hacktime,
+               "\nweaktime1 = ", weaken1time,
+               "\ngrow time = ", growTime,
+               "\n weaktime2 = ", weaken2time
+            )
+      */
+      /*
+            if (this.id == 0) {
+               this.ns.tprint(
+                  "\nId = ", this.id,
+                  "\nhacktimeRemaining = ", hacktimeRemaining,
+                  "\nweaktime1Remaining = ", weaktimeRemaining,
+                  "\ngrow time remaining = ", growtimeRemaining,
+                  "\n weaktime2  remaining = ", weaktime2Remaining
+               )
+            }
+      */
    }
 
 }
@@ -322,14 +343,16 @@ export class Batcher {
 
       ht = Math.floor(ht)
       let hackSecurityIncrase = calculateServerSecurityIncrease(ht, false)
+      hackSecurityIncrase *= 1.1
 
       //How many thread to double the cash
       gt = growthAnalyzeThreads(serv, this.ns.getPlayer(), 1 / (1 - this.percentStolen), 1)
       gt = Math.ceil(gt)
       let growSecurityIncrase = calculateServerSecurityIncrease(gt, true)
+      growSecurityIncrase *= 1.1
 
-      wt1 = getThreadsToWeaken(hackSecurityIncrase, 1);
-      wt2 = getThreadsToWeaken(growSecurityIncrase, 1);
+      wt1 = getThreadsToWeaken(hackSecurityIncrase, 1) + 1;
+      wt2 = getThreadsToWeaken(growSecurityIncrase, 1) + 1;
 
       wt1 = Math.ceil(wt1)
       wt2 = Math.ceil(wt2)
@@ -368,16 +391,16 @@ export class Batcher {
 
    loop() {
 
-
-
-
       let { depth, period } = this.getDepthAndPeriod();
+      let delay = Date.now() - (this.lastStart + period)
 
 
-      if (Date.now() > this.lastStart + period) {
+      if (Date.now() > (this.lastStart + period)) {
 
 
-         let delay = Date.now() - (this.lastStart + period)
+
+
+
 
          if (this.lastStart == 0) {
             delay = 0

@@ -2,9 +2,7 @@
 
 /** @param {NS} ns */
 export async function main(ns) {
-
    ns.disableLog("ALL")
-
    if (ns.args.length < 2) {
       ns.print("Not enough args");
       return;
@@ -16,4 +14,6 @@ export async function main(ns) {
    await ns.grow(ns.args[0]);
    ns.print("Done");
 
-}
+   ns.tprint("Done growing ", ns.args[2])
+
+}  

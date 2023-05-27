@@ -11,7 +11,9 @@ export async function main(ns) {
    await ns.sleep(ns.args[1])
    ns.print("Weakening " + ns.args[0]);
    ns.enableLog("ALL")
-   await ns.grow(ns.args[0]);
+   await ns.weaken(ns.args[0]);
    ns.print("Done");
+
+   //ns.tprint("Done weakening  ", ns.args[2])
 
 }

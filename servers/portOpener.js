@@ -3,23 +3,23 @@ import { findAllServers } from "servers/findAllServers"
 /** @param {NS} ns */
 export function openPortsOnServer(ns, server) {
 
-   if (ns.fileExists("brutessh.exe")) {
+   if (ns.fileExists("brutessh.exe", "home")) {
       ns.brutessh(server);
    }
 
-   if (ns.fileExists("ftpcrack.exe")) {
+   if (ns.fileExists("ftpcrack.exe", "home")) {
       ns.ftpcrack(server);
    }
 
-   if (ns.fileExists("relaysmtp.exe")) {
+   if (ns.fileExists("relaysmtp.exe", "home")) {
       ns.relaysmtp(server);
    }
 
-   if (ns.fileExists("httpworm.exe")) {
+   if (ns.fileExists("httpworm.exe", "home")) {
       ns.httpworm(server);
    }
 
-   if (ns.fileExists("sqlinject.exe")) {
+   if (ns.fileExists("sqlinject.exe", "home")) {
       ns.sqlinject(server);
    }
 
