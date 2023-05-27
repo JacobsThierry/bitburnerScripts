@@ -35,6 +35,24 @@ export class serverResetter {
 
    }
 
+   stateMessage() {
+      if (this.state == 0) {
+         return "Executing weakens 1 (" + this.weakenThread + ") threads left"
+      }
+      if (this.state == 1) {
+         return "Calculating grow state"
+      }
+      if (this.state == 2) {
+         return "Executing grows (" + this.gthread + ") threads left"
+      }
+      if (this.state == 3) {
+         return "Executing weakens 2 (" + this.weakenThread + ") threads left"
+      }
+      if (this.state == 4) {
+         return "Waiting for the weakens to end (" + this.ns.tFormat(this.waitTime - Date.now()) + " left)"
+      }
+   }
+
    state0() {
       this.weakenThread = execSomewhere(this.ns, this.weakScript, this.weakenThread, this.server);
       if (this.weakenThread == 0) {

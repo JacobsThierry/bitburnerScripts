@@ -193,7 +193,7 @@ export class Batcher {
       out += "Started : " + this.serverResetter.isDone()
 
       if (!this.serverResetter.isDone()) {
-         out += " (state " + this.serverResetter.state + "/" + serverResetter.maxState + ")"
+         out += " (state " + this.serverResetter.state + "/" + serverResetter.maxState + " - " + this.serverResetter.stateMessage() + ")"
       }
 
       out += "\n\n"
