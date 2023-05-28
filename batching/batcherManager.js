@@ -14,7 +14,7 @@ export class BatcherManager {
 
    /**
     * Description
-    * @param {ns} ns
+    * @param {NS} ns
     * @returns {any}
     */
    constructor(ns) {
@@ -41,48 +41,68 @@ export class BatcherManager {
             }
 
             let batcher = this.batchers[i]
+
+
+
             let batcherOpt = optimizeBatch(this.ns, batcher, totalThreadsAvailable + batcher.threadsCount())
 
-            if (batcherOpt.getRevenues() > batcher.getRevenues()) {
-               totalThreadsAvailable += batcher.threadsCount()
-               totalThreadsAvailable -= batcherOpt.threadsCount()
-               this.batchers[i] = batcherOpt;
-            }
+
+            totalThreadsAvailable += batcher.threadsCount()
+            totalThreadsAvailable -= batcherOpt.threadsCount()
+            this.batchers[i] = batcherOpt;
+
+
          }
-
          let nonMaxed = this.batchers.filter(batch => !isMaxed(batch))
-         totalThreadsAvailable = this.getTotalThreadsAvailable()
 
-         if (totalThreadsAvailable > 100 || nonMaxed.length == 0) {
-            let bestServers = findBestServers(this.ns);
+         let added = true
+         while (added) {
+            added = false
+            totalThreadsAvailable = this.getTotalThreadsAvailable()
 
-            //Filtering the server that are alredy hacked
-            bestServers = bestServers.filter(serv => !(this.batchers.some(batcher => batcher.server.trim() == serv[0].server.trim())))
+            if (totalThreadsAvailable > 100 || nonMaxed.length == 0) {
+               let bestServers = findBestServers(this.ns);
 
-            let b = bestServers[0][0]
-            optimizeBatch(this.ns, b, totalThreadsAvailable);
+               //Filtering the server that are alredy hacked
+               bestServers = bestServers.filter(serv => !(this.batchers.some(batcher => batcher.server.trim() == serv[0].server.trim())))
 
-            let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
+               let b = bestServers[0][0]
+               optimizeBatch(this.ns, b, totalThreadsAvailable);
 
-            if (ht > 0) {
-               this.batchers.push(b)
+               let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
+
+               if (ht > 0 && b.threadsCount() != NaN) {
+                  this.batchers.push(b)
+                  added = true
+               }
             }
-
          }
       }
 
 
 
 
-      this.clock = (this.clock + 1) % 500
-      for (let i = 0; i < this.batchers; i++) {
+      this.clock = (this.clock + 1) % 6000
+      for (let i = 0; i < this.batchers.length; i++) {
+
          let bat = this.batchers[i]
          bat.loop()
       }
    }
 
    getTotalThreadsAvailable() {
-      return getMaximumInstanceOfScript(this.ns, "/hackingFunctions/grow_delay.js", true) - this.sumThreadUsage()
+      return (getMaximumInstanceOfScript(this.ns, "/hackingFunctions/grow_delay.js", true) - this.sumThreadUsage())
+   }
+
+   getRevenues() {
+      let rev = 0;
+      for (let i = 0; i < this.batchers.length; i++) {
+         let b = this.batchers[i]
+         if (b.serverResetter.isDone) {
+            rev += b.getRevenues()
+         }
+      }
+      return rev;
    }
 
    /**

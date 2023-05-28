@@ -46,6 +46,7 @@ export function execSomewhere(ns, script, threads, ...args) {
    servers = servers.filter(el => el != "home")
    servers.push("home");
 
+
    let scriptRam = ns.getScriptRam(script)
 
    if (threads == 0) {
@@ -63,9 +64,6 @@ export function execSomewhere(ns, script, threads, ...args) {
 
       let ramAvailable = ns.getServerMaxRam(serv) - ns.getServerUsedRam(serv);
 
-      if (serv == "home") {
-         ramAvailable -= 2;
-      }
 
       let threadRoom = Math.min(threads, Math.floor(ramAvailable / scriptRam));
 

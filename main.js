@@ -10,6 +10,9 @@ import { calculateWeakenTime } from "Formulas/calculateWeakenTime"
 import { openAllPorts } from "servers/portOpener"
 import { BatcherManager } from "batching/batcherManager"
 
+import { Chart } from "asciiCharts/chart";
+import { Serie } from "asciiCharts/serie";
+
 /** @param {NS} ns */
 export async function main(ns) {
 
@@ -19,6 +22,8 @@ export async function main(ns) {
    ns.disableLog("scan")
    ns.disableLog("getServerMaxRam")
    ns.disableLog("getServerUsedRam")
+
+   ns.enableLog("exec")
    //ns.enableLog("exec")
 
    ns.tail();
@@ -58,7 +63,7 @@ export async function main(ns) {
 
 
 
-   let clock = 0;
+
    let manager = new BatcherManager(ns)
 
    //Forcing the n00dle
@@ -67,15 +72,46 @@ export async function main(ns) {
    manager.batchers.push(b);
 
 
+   let chart = new Chart()
+
+   let mockSerie = new Serie()
+   chart.addSerie(mockSerie)
+
+   chart.cfg.min = 0
+   chart.cfg.max = 6000
+   chart.cfg.height = 10
+
+   chart.cfg.colors = [Chart.red, Chart.magenta]
+
+
+   let clock = 0;
    //todo : split ça dans des fonctions
    while (true) {
-      openAllPorts(ns);
-      serverManagerLoop(ns);
+      if (clock == 0) {
+         openAllPorts(ns);
+         serverManagerLoop(ns);
+      }
 
       manager.loop()
-      display(ns, manager)
 
-      await ns.sleep(50);
+      //display(ns, manager)
+
+      ns.clearLog()
+
+      mockSerie.addValue(clock)
+
+      let str = ""
+      str += mockSerie.data
+
+      str += "\n"
+      str += (chart.plot(150))
+      ns.print(str)
+
+
+
+
+      clock = (clock + 1) % 6000
+      await ns.sleep(10);
    }
 }
 
@@ -95,20 +131,10 @@ function display(ns, manager) {
 
    str += "\n=============================================";
    str += "\nMax thread : " + getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true)
-   str += "\nThreads available : " + getTotalThreadsAvailable(ns, manager);
+   str += "\nThreads available : " + manager.getTotalThreadsAvailable();
 
    ns.clearLog()
    ns.print(str)
 
 }
 
-
-/**
- * Description
- * @param {NS} ns
- * @param {BatcherManager} manager
- * @returns {any}
- */
-function getTotalThreadsAvailable(ns, manager) {
-   return getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true) - manager.sumThreadUsage()
-}

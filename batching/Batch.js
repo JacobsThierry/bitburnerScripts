@@ -109,7 +109,7 @@ export class Batch {
          //In case the game freez and the weak is too late
          if (weaktimeRemaining < -this.t0) {
             this.selfDestroy()
-            this.ns.tprint("Canceled batch ", this.id, " because it is late")
+            // this.ns.tprint("Canceled batch ", this.id, " because it is late")
          }
 
          if (w1ok == 0) {
@@ -147,7 +147,7 @@ export class Batch {
          //In case the game freez and the weak is too late
          if (weaktime2Remaining < -this.t0) {
             this.selfDestroy()
-            this.ns.tprint("Canceled batch ", this.id, " because it is late")
+            // this.ns.tprint("Canceled batch ", this.id, " because it is late")
          }
 
          let w2ok = execSomewhere(this.ns, this.weakScript, this.w2thread, this.server, weaktime2Remaining, this.id);
@@ -189,6 +189,7 @@ export class Batcher {
       this.lastStart = 0;
 
       this.serverResetter = new serverResetter(ns, server, this.threadsCount())
+
    }
 
    toString() {
@@ -237,11 +238,25 @@ export class Batcher {
 
 
       out += "\n"
-      out += "Estimated revenues per sec : " + this.ns.formatNumber(this.getRevenues()) + "\n";
+      let rev = this.getRevenues()
+      if (rev == NaN) {
+         rev = 0
+      }
+      try {
+         out += "Estimated revenues per sec : " + this.ns.formatNumber(rev) + "\n";
+
+      } catch {
+         out += "Estimated revenues per sec : " + this.ns.formatNumber(0) + "\n";
+
+      }
 
       out += "Ram per cycle : " + this.ns.formatRam(this.getCycleRamCost()) + "\n";
 
-      out += "Total ram cost : " + this.ns.formatRam(this.getTotalRamCost()) + "\n";
+      try {
+         out += "Total ram cost : " + this.ns.formatRam(this.getTotalRamCost()) + "\n";
+      } catch {
+         out += "Total ram cost : " + this.ns.formatRam(0) + "\n";
+      }
       out += "Total thread count : " + ((ht + wt1 + gt + wt2) * depth) + "\n"
 
 
@@ -441,6 +456,15 @@ export class Batcher {
       return this.getCycleRamCost() * depth;
    }
 
+   getMoneyPercent() {
+      let serv = this.ns.getServer(this.server)
+      return 100 * serv.moneyAvailable / serv.moneyMax
+   }
+
+   getSecurityPercent() {
+      let serv = this.ns.getServer(this.server)
+      return 100 * (serv.hackDifficulty - serv.minDifficulty) / (100 - serv.minDifficulty)
+   }
 
    loop() {
 
