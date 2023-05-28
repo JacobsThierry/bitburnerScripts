@@ -72,17 +72,6 @@ export async function main(ns) {
    manager.batchers.push(b);
 
 
-   let chart = new Chart()
-
-   let mockSerie = new Serie()
-   chart.addSerie(mockSerie)
-
-   chart.cfg.min = 0
-   chart.cfg.max = 6000
-   chart.cfg.height = 10
-
-   chart.cfg.colors = [Chart.red, Chart.magenta]
-
 
    let clock = 0;
    //todo : split ça dans des fonctions
@@ -94,20 +83,7 @@ export async function main(ns) {
 
       manager.loop()
 
-      //display(ns, manager)
-
-      ns.clearLog()
-
-      mockSerie.addValue(clock)
-
-      let str = ""
-      str += mockSerie.data
-
-      str += "\n"
-      str += (chart.plot(150))
-      ns.print(str)
-
-
+      display(ns, manager)
 
 
       clock = (clock + 1) % 6000

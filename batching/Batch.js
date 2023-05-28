@@ -10,6 +10,7 @@ import { getThreadsToWeaken } from "Formulas/calculateWeakenAmount"
 import { serverResetter } from "hackingFunctions/serverResetter"
 import { calculatePercentMoneyHacked } from "Formulas/calculatePercentMoneyHacked"
 import { calculateHackingChance } from "Formulas/calculateHackingChance"
+import { resetServer } from "hackingFunctions/resetServer"
 
 export class Batch {
 
@@ -480,6 +481,13 @@ export class Batcher {
 
       let delay = Date.now() - (this.lastStart + period)
 
+      //Emergency stop if for some reasons the server run out of cash
+      if (this.getMoneyPercent() < 20) {
+         this.serverResetter = new serverResetter(this.ns, this.server, this.threadsCount())
+         this.batches = []
+         this.ns.tprint(this.server, " has stopped because the money was too low")
+         return
+      }
 
 
       if (Date.now() > (this.lastStart + period)) {

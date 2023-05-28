@@ -65,4 +65,26 @@ export class Chart {
       return asciicharts.plot(data, this.cfg)
    }
 
+   plotWithXaxis(nbElems = 30) {
+      let data = []
+
+      for (let i = 0; i < this.series.length; i++) {
+         /**@type {Serie} */
+         let s = this.series[i]
+         data.push(s.toArray(nbElems))
+      }
+
+      let xAxis = this.series[0].toStampArray(nbElems)
+
+      for (let i = 0; i < xAxis.length; i++) {
+         let d = new Date(xAxis[i])
+
+         //xAxis[i] = `${d.getHours}:${d.getMinutes}`
+      }
+
+
+      return asciicharts.plotWithXaxis(data, xAxis, this.cfg)
+
+   }
+
 }

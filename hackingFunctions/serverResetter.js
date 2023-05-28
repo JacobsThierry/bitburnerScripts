@@ -9,6 +9,8 @@ export class serverResetter {
 
    static maxState = 4
 
+
+
    /**
     * Description
     * @param {NS} ns
