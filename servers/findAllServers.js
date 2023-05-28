@@ -1,4 +1,8 @@
-/** @param {NS} ns */
+/**
+ * Description
+ * @param {NS} ns
+ * @returns {string[]}
+ */
 export function findAllServers(ns) {
    let servers = ["home"]
 
@@ -21,7 +25,12 @@ export function findAllServers(ns) {
    return servers
 }
 
-/** @param {NS} ns */
+
+/**
+ * Description
+ * @param {NS} ns
+ * @returns {string[]}
+ */
 export function findAllRootServers(ns) {
    let servers = ["home"]
    let out = ["home"]

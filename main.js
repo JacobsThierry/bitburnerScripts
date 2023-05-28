@@ -76,6 +76,7 @@ export async function main(ns) {
    let clock = 0;
    //todo : split ça dans des fonctions
    while (true) {
+
       if (clock == 0) {
          openAllPorts(ns);
          serverManagerLoop(ns);
@@ -86,7 +87,7 @@ export async function main(ns) {
       display(ns, manager)
 
 
-      clock = (clock + 1) % 6000
+      clock = (clock + 1) % 600
       await ns.sleep(10);
    }
 }

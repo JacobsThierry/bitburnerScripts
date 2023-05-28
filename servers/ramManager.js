@@ -1,6 +1,8 @@
 
 import { findAllRootServers, findAllServers } from "servers/findAllServers"
 
+
+
 /** @param {NS} ns */
 export function getTotalRam(ns) {
    let servers = findAllRootServers(ns);
@@ -43,8 +45,21 @@ export function getTotalRamAvailable(ns) {
 export function execSomewhere(ns, script, threads, ...args) {
    let servers = findAllRootServers(ns);
 
+   //put home last
    servers = servers.filter(el => el != "home")
    servers.push("home");
+   /*
+      servers = servers.filter(el => (!el.startsWith(pServerPrefix)))
+      servers = getPlayerServers(ns).concat(servers)
+   */
+
+   let pservers = servers.filter(s => (s.startsWith("pserv")))
+   servers = servers.filter(s => !(s.startsWith("pserv")))
+
+   servers = pservers.concat(servers);
+
+   //ns.tprint(servers)
+
 
 
    let scriptRam = ns.getScriptRam(script)
