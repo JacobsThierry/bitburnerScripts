@@ -1,5 +1,4 @@
 
-let allServers = []
 
 /**
  * Description
@@ -7,10 +6,6 @@ let allServers = []
  * @returns {string[]}
  */
 export function findAllServers(ns) {
-   //Find all servers is called all the time, doing this must save a lot of time
-   if (allServers.length > 0) {
-      return allServers
-   }
 
    let servers = ["home"]
    let i = 0;
@@ -28,12 +23,12 @@ export function findAllServers(ns) {
       i++;
    }
 
-   allServers = servers;
+
 
    return servers
 }
 
-let allRootServers = []
+
 /**
  * Description
  * @param {NS} ns
@@ -41,9 +36,7 @@ let allRootServers = []
  */
 export function findAllRootServers(ns) {
 
-   if (allRootServers.length > 0) {
-      return allRootServers
-   }
+
 
    let servers = ["home"]
    let out = ["home"]
@@ -70,7 +63,7 @@ export function findAllRootServers(ns) {
       i++;
    }
 
-   allRootServers = out;
+
 
    return out
 

@@ -36,7 +36,7 @@ export function solveContracts(ns) {
 /** @param {NS} ns */
 export async function main(ns) {
 
-   ns.tail()
+   //ns.tail()
    solveContracts(ns)
 
 }

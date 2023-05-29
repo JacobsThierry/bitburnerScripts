@@ -34,7 +34,8 @@ export function serverManagerLoop(ns) {
 
    let servers = getPlayerServers(ns);
 
-
+   execSomewhere(ns, "/servers/singularityUpgradeServerRam.js", 1,);
+   execSomewhere(ns, "/servers/singularityUpgradeServerCore.js", 1);
 
    if (servers.length < maxServers) {
 
