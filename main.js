@@ -12,6 +12,7 @@ import { BatcherManager } from "batching/batcherManager"
 
 import { Chart } from "asciiCharts/chart";
 import { Serie } from "asciiCharts/serie";
+import { solveContracts } from "codingContracts/solveContracts";
 
 /** @param {NS} ns */
 export async function main(ns) {
@@ -80,6 +81,7 @@ export async function main(ns) {
       if (clock == 0) {
          openAllPorts(ns);
          serverManagerLoop(ns);
+         solveContracts(ns)
       }
 
       manager.loop()

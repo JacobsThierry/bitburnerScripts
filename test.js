@@ -35,7 +35,9 @@ export async function main(ns) {
    
       ns.print(str)*/
 
-   ns.print(await getPathToServer(ns, "home", "megacorp"))
+   //ns.print(await getPathToServer(ns, "home", "megacorp"))
+
+   ns.tprint(ns.codingcontract.getContractTypes())
 
 
 }
