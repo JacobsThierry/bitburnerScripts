@@ -17,7 +17,7 @@ export class Augmentation {
       this.faction = faction
    }
 
-   getPrice() {
+   getAugPrice() {
       return this.ns.singularity.getAugmentationPrice(this.augmentationName)
    }
 

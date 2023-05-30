@@ -59,8 +59,6 @@ export class Batch {
 
 
       this.id = id;
-
-
       this.hackStarted = false
       this.weak1Started = false
       this.growStarted = false
@@ -81,9 +79,41 @@ export class Batch {
       this.dieTime = Date.now()
    }
 
+   //Ammout of threads currently running
+   threadsRunning() {
+      let hacktime = this.startTime + this.hdelay;
+      let weaken1time = this.startTime + this.w1delay;
+      let growTime = this.startTime + this.gdelay;
+      let weaken2time = this.startTime + this.w2delay
+
+      let serv = this.ns.getServer(this.server)
+      serv.hackDifficulty = serv.minDifficulty
+      let p = this.ns.getPlayer()
+
+      let tot = 0
+
+      if (this.hackStarted && ((hacktime + calculateHackingTime(serv, p)) > Date.now())) {
+         tot += this.hthread
+      }
+
+
+      if (this.weak1Started && ((weaken1time + calculateWeakenTime(serv, p)) > Date.now())) {
+
+         tot += this.w1thread
+      }
+
+      if (this.growStarted && ((growTime + calculateGrowTime(serv, p)) > Date.now())) {
+         tot += this.gthread
+      }
+
+      if (this.weak2Started && ((weaken2time + calculateWeakenTime(serv, p)) > Date.now())) {
+         tot += this.w2thread
+      }
+
+      return tot;
+   }
+
    update() {
-
-
       let hacktime = this.startTime + this.hdelay;
       let hacktimeRemaining = hacktime - Date.now();
 
@@ -186,10 +216,11 @@ export class Batcher {
       this.percentStolen = percentStolen;
 
       this.id = 0
+      /** @type {Batch[]} */
       this.batches = []
       this.lastStart = 0;
 
-      this.serverResetter = new serverResetter(ns, server, this.threadsCount())
+      this.serverResetter = new serverResetter(ns, server, this.trueThreadsCount())
 
    }
 
@@ -274,6 +305,47 @@ export class Batcher {
       let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
       let { depth, period } = this.getDepthAndPeriod();
       return ((ht + wt1 + gt + wt2) * depth)
+   }
+
+   /**
+    * Sum of all the threads used concurrently by the script
+    * Not perfect : the margin of error is +10%. The value returned is never less than the true total thread count
+    * @returns {number}
+    */
+   trueThreadsCount() {
+
+      let { ht, wt1, gt, wt2 } = this.getThreadsPerCycle();
+      let serv = this.ns.getServer(this.server)
+      serv.hackDifficulty = serv.minDifficulty
+
+      let p = this.ns.getPlayer()
+
+      let totalThread = this.threadsCount()
+
+      //ammount of time per batch without hacking 
+      let timeWithoutHack = calculateWeakenTime(serv, p) - calculateHackingTime(serv, p)
+
+      //number of period without hacking per batch
+      let periodWithoutHack = timeWithoutHack / this.getPeriod()
+
+      //this.ns.tprint("Period without hack : ", periodWithoutHack)
+
+      //same for grow
+      let timeWithoutGrow = calculateWeakenTime(serv, p) - calculateGrowTime(serv, p)
+      let periodWithoutGrow = timeWithoutGrow / this.getPeriod()
+
+      return Math.ceil(totalThread - (periodWithoutHack * ht - periodWithoutGrow * gt))
+   }
+
+   compareTrueThreadCount() {
+
+      if (this.batches.length == this.getDepth()) {
+
+         let threadRunning = this.batches.reduce((acc, current) => acc + current.threadsRunning(), 0)
+
+         let calculatedValue = this.trueThreadCount()
+         this.ns.tprint("Thread running = ", threadRunning, " calculated value = ", calculatedValue, ". Diff = ", calculatedValue - threadRunning)
+      }
    }
 
    /**
@@ -479,7 +551,7 @@ export class Batcher {
    loop() {
 
       if (!this.serverResetter.isDone()) {
-         this.serverResetter.maxThreads = this.threadsCount()
+         this.serverResetter.maxThreads = this.trueThreadsCount()
          this.serverResetter.loop()
          return;
       }
@@ -492,7 +564,7 @@ export class Batcher {
 
       //Emergency stop if for some reasons the server run out of cash
       if (this.getMoneyPercent() < 5) {
-         this.serverResetter = new serverResetter(this.ns, this.server, this.threadsCount())
+         this.serverResetter = new serverResetter(this.ns, this.server, this.trueThreadsCount())
          this.batches = []
          //this.ns.tprint(this.server, " has stopped because the money was too low")
          return

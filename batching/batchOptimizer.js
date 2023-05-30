@@ -2,19 +2,6 @@ import { Batcher } from "batching/Batch";
 import { getMaximumInstanceOfScript } from "servers/ramManager"
 import { findAllRootServers, findAllServers } from "servers/findAllServers"
 
-/**
- * Description
- * @param {Batcher} batcher
- * @returns {any}
- */
-function getBatcherThreadCount(batcher) {
-   let { ht, wt1, gt, wt2 } = batcher.getThreadsPerCycle();
-
-   let { depth, period } = batcher.getDepthAndPeriod();
-
-   return (ht + wt1 + gt + wt2) * depth;
-}
-
 let maxPercentStolen = 0.5;
 let maxT0 = 200;
 
@@ -44,7 +31,7 @@ export function optimizeBatch(ns, batcher, maxThreads = -1) {
 
    let maxloop = 100000
    let clock = 0;
-   while (getBatcherThreadCount(batcher) > maxThreads && maxloop-- > 0) {
+   while (batcher.trueThreadsCount() > maxThreads && maxloop-- > 0) {
       if (clock == 0) {
          batcher.percentStolen *= 0.9;
       } else {
@@ -83,7 +70,7 @@ export function findBestServers(ns, examptList = ["home"]) {
 
 
 
-      revenues.push([b, b.getRevenues() / b.threadsCount()])
+      revenues.push([b, b.getRevenues() / b.trueThreadsCount()])
 
    }
 

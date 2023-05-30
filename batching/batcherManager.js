@@ -44,11 +44,11 @@ export class BatcherManager {
 
 
 
-            let batcherOpt = optimizeBatch(this.ns, batcher, totalThreadsAvailable + batcher.threadsCount())
+            let batcherOpt = optimizeBatch(this.ns, batcher, totalThreadsAvailable + batcher.trueThreadsCount())
 
 
-            totalThreadsAvailable += batcher.threadsCount()
-            totalThreadsAvailable -= batcherOpt.threadsCount()
+            totalThreadsAvailable += batcher.trueThreadsCount()
+            totalThreadsAvailable -= batcherOpt.trueThreadsCount()
             this.batchers[i] = batcherOpt;
 
 
@@ -71,7 +71,7 @@ export class BatcherManager {
 
                let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
 
-               if (ht > 0 && b.threadsCount() != NaN) {
+               if (ht > 0 && b.trueThreadsCount() != NaN) {
                   this.batchers.push(b)
                   added = true
                }
@@ -87,6 +87,9 @@ export class BatcherManager {
 
          let bat = this.batchers[i]
          bat.loop()
+
+         //bat.compareThreadCount2()
+
       }
    }
 
@@ -119,7 +122,7 @@ export class BatcherManager {
       let sum = 0
       for (let i = 0; i < this.batchers.length; i++) {
          let b = this.batchers[i]
-         sum += b.threadsCount()
+         sum += b.trueThreadsCount()
       }
       return sum
 

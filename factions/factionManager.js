@@ -1,6 +1,8 @@
 import { CONSTANTS } from "Formulas/constant";
+import { Augmentation } from "factions/augmentation";
 import { Faction } from "factions/faction"
 import { getDonationFromRep } from "factions/factionsFormulas";
+import { execSomewhere } from "servers/ramManager";
 
 
 export class FactionsManager {
@@ -54,6 +56,13 @@ export class FactionsManager {
       return this.ns.singularity.getOwnedAugmentations(true).length - this.ns.singularity.getOwnedAugmentations(false).length
    }
 
+   getHighestRepFaction() {
+      if (this.factionsList.length == 0) {
+         return null
+      }
+      return this.factionsList.reduce(function (prev, current) { return ((prev.getRep() < current.getRep()) && current.isJoined()) ? current : prev }, this.factionsList[0])
+   }
+
    loop() {
       for (let i = 0; i < this.factionsList.length; i++) {
          let faction = this.factionsList[i]
@@ -69,7 +78,7 @@ export class FactionsManager {
 
          let augs = faction.augmentations
 
-         augs.sort((a, b) => a.getPrice() - b.getPrice())
+         augs.sort((a, b) => a.getAugPrice() - b.getAugPrice())
 
          for (let j = 0; j < augs.length; j++) {
             let a = augs[j]
@@ -84,7 +93,7 @@ export class FactionsManager {
                }
             }
 
-            if (faction.getRep() > a.getReputationReq() && this.ns.getServerMoneyAvailable("home") > a.getPrice()) {
+            if (faction.getRep() > a.getReputationReq() && this.ns.getServerMoneyAvailable("home") > a.getAugPrice()) {
                a.purchase();
             }
          }
@@ -101,11 +110,19 @@ export class FactionsManager {
       if (this.getNonInstalledAugCount() > 0) {
          let revenues = parseInt(this.ns.read("/data/hackRevenues.txt"))
 
-         if (this.getNextFactionToWorkFor().getCheapeastRepAug().getPrice() > 120 * revenues) {
-            this.ns.singularity.installAugmentations("main.js")
+         if (this.getNextFactionToWorkFor().getCheapeastRepAug().getAugPrice() > 120 * revenues) {
+
+            let highestRep = this.getHighestRepFaction()
+            for (let q = 0; q < 10; q++) {
+               //this.ns.singularity.purchaseAugmentation(highestRep.factionName, Augmentation.neuroflux);
+
+               execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js");
+
+            }
+
+            execSomewhere(this.ns, "factions/workers/installAugs.js");
          }
       }
-
    }
 
 }
