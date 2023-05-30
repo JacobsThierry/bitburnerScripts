@@ -14,10 +14,11 @@ export async function backDoorAll(ns) {
    ns.singularity.connect("home")
    let previousServ = "home"
 
+
    for (let i = 0; i < servers.length; i++) {
       let serv = servers[i]
 
-      if ((!serv == "w0rld_d43m0n")(!ns.getServer(serv).hasAdminRights) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
+      if ((!(serv == "w0rld_d43m0n")) || (!ns.getServer(serv).backdoorInstalled) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
          continue
       }
 

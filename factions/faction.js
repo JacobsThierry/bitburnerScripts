@@ -79,6 +79,18 @@ export class Faction {
       }
    }
 
+   getCheapeastAug() {
+      let a = this.getAugsRemaining()
+
+      //a = a.filter(aug => aug.getReputationReq() > this.getRep())
+
+      if (a.length > 0) {
+         return a.reduce(function (prev, curr) { return prev.getAugPrice() < curr.getAugPrice() ? prev : curr })
+      } else {
+         return null
+      }
+   }
+
    getFavor() {
       return this.ns.singularity.getFactionFavor(this.factionName)
    }
@@ -89,6 +101,11 @@ export class Faction {
 
    //RepGain => par cyle. cycle = 200ms
    getTimeToNextAug() {
+
+      if (this.getCheapeastRepAug() == null) {
+         return Infinity
+      }
+
       let repGain = getHackingWorkRepGain(this.ns, this.ns.getPlayer(), this.getFavor()) * 5
       return (this.getCheapeastRepAug().getReputationReq() - this.getRep()) / repGain
    }

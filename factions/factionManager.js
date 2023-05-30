@@ -52,6 +52,16 @@ export class FactionsManager {
       return joinedFactions[0]
    }
 
+   getCheapeastAug() {
+      let fac = this.getJoinedFactions().reduce((previous, current) => {
+         if (current == null) return previous
+         return previous.getCheapeastAug().getAugPrice() < current.getCheapeastAug().getAugPrice() ? previous : current
+      })
+
+      return fac.getCheapeastAug()
+
+   }
+
    getNonInstalledAugCount() {
       return this.ns.singularity.getOwnedAugmentations(true).length - this.ns.singularity.getOwnedAugmentations(false).length
    }
@@ -107,21 +117,42 @@ export class FactionsManager {
          this.getNextFactionToWorkFor().workFor(this.ns.singularity.isFocused())
       }
 
+
       if (this.getNonInstalledAugCount() > 0) {
          let revenues = parseInt(this.ns.read("/data/hackRevenues.txt"))
 
-         if (this.getNextFactionToWorkFor().getCheapeastRepAug().getAugPrice() > 120 * revenues) {
+         let lastReset = -1;
+
+         try {
+            lastReset = parseInt(this.ns.read("/data/lastInstall.txt"))
+         } catch { }
+
+         let firstBuy = -1;
+
+         try {
+            firstBuy = parseInt(this.ns.read("/data/timeOfFirstBuy.txt"))
+         } catch { }
+
+
+
+
+         let timeSinceLastReset = Date.now() - lastReset
+         let timeToFirstAug = lastReset - firstBuy
+         let timeToAffordNextAug = this.getCheapeastAug().getAugPrice() / revenues
+
+         if (timeToFirstAug < timeToAffordNextAug || lastReset == -1) {
 
             let highestRep = this.getHighestRepFaction()
             for (let q = 0; q < 10; q++) {
                //this.ns.singularity.purchaseAugmentation(highestRep.factionName, Augmentation.neuroflux);
 
-               execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js");
+               execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js", 1, highestRep.factionName);
 
             }
 
             execSomewhere(this.ns, "factions/workers/installAugs.js");
          }
+
       }
    }
 
