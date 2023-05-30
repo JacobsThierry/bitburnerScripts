@@ -42,7 +42,7 @@ export function getTotalRamAvailable(ns) {
  * @param {any} ...args
  * @returns {number}
  */
-export function execSomewhere(ns, script, threads, ...args) {
+export function execSomewhere(ns, script, threads = 1, ...args) {
    let servers = findAllRootServers(ns);
 
    //put home last

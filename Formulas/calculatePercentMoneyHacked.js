@@ -14,7 +14,7 @@ export function calculatePercentMoneyHacked(ns, server, person) {
    let bnm = 0
    try {
       let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
-      bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+      let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
       bnm = bitNodeMultipliers.ScriptHackMoney;
    } catch {
       bnm = 1;

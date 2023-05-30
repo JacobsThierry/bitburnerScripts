@@ -24,7 +24,7 @@ export function numCycleForGrowth(ns, server, player, growth, cores = 1) {
    let bnm = 0
    try {
       let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
-      bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+      let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
       bnm = bitNodeMultipliers.ServerGrowthRate;
    } catch {
       bnm = 1;

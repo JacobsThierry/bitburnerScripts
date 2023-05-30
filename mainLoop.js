@@ -52,24 +52,28 @@ export class Main {
       if (this.clock == 0) {
          openAllPorts(this.ns);
          serverManagerLoop(this.ns);
-         execSomewhere(this.ns, "/codingContracts/solveContracts.js", 1)
+         execSomewhere(this.ns, "/codingContracts/solveContracts.js")
          this.writeRevenues()
-
       }
 
+      if (this.clock == 100) {
+         execSomewhere(this.ns, "/factions/factionManager.js")
+      }
+
+      if (this.clock == 200) {
+         execSomewhere(this.ns, "/servers/backDoorer.js")
+      }
+
+
       this.manager.loop()
-
       display(this.ns, this.manager)
-
-
-      this.clock = (this.clock + 1) % 600
+      this.clock = (this.clock + 1) % 1000
    }
 
 }
 
 /** @param {NS} ns */
 export async function main(ns) {
-
 
    let m = new Main(ns)
    while (true) {
