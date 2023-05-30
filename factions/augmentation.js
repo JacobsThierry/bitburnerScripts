@@ -45,7 +45,7 @@ export class Augmentation {
 
    purchase() {
       //return this.ns.singularity.purchaseAugmentation(this.faction, this.augmentationName)
-      execSomewhere(this.ns, "/factions/workers/purchaseAugmentation.js", 1, this.faction, this.augmentationName)
+      execSomewhere(this.ns, "factions/workers/purchaseAugmentation.js", 1, this.faction, this.augmentationName)
    }
 
    isNeuroflux() {

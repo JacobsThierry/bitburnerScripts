@@ -98,8 +98,13 @@ export class BatcherManager {
       let rev = 0;
       for (let i = 0; i < this.batchers.length; i++) {
          let b = this.batchers[i]
-         if (b.serverResetter.isDone) {
-            rev += b.getRevenues()
+         if (b.serverResetter.isDone()) {
+
+            let temp = b.getRevenues()
+            if (b.getDepth() > 0) {
+               temp *= b.batches.length / b.getDepth()
+               rev += temp
+            }
          }
       }
       return rev;

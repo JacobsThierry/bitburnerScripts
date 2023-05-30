@@ -52,16 +52,24 @@ export class Main {
       if (this.clock == 0) {
          openAllPorts(this.ns);
          serverManagerLoop(this.ns);
-         execSomewhere(this.ns, "/codingContracts/solveContracts.js")
-         this.writeRevenues()
+         execSomewhere(this.ns, "codingContracts/solveContracts.js")
+
       }
 
       if (this.clock == 100) {
-         execSomewhere(this.ns, "/factions/factionManager.js")
+         execSomewhere(this.ns, "factions/factionManager.js")
       }
 
       if (this.clock == 200) {
-         execSomewhere(this.ns, "/servers/backDoorer.js")
+         execSomewhere(this.ns, "servers/backDoorer.js")
+      }
+
+      if (this.clock == 300) {
+         execSomewhere(this.ns, "programs/buyTor.js")
+      }
+
+      if (this.clock == 900) {
+         this.writeRevenues()
       }
 
 

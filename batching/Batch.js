@@ -324,6 +324,15 @@ export class Batcher {
       return { weak_time, grow_time, hack_time }
    }
 
+   getDepth() {
+      let { depth, period } = this.getDepthAndPeriod();
+      return depth
+   }
+
+   getPeriod() {
+      let { depth, period } = this.getDepthAndPeriod();
+      return period
+   }
 
    /**
     * return the depth and the period of the batch

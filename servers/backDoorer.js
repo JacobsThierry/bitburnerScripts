@@ -4,6 +4,12 @@ import { getPathToServer } from "servers/getPathToServer";
 export async function backDoorAll(ns) {
 
    let servers = findAllServers(ns);
+   servers.splice("CSEC", 1)
+   servers.splice("avmnite-02h", 1)
+   servers.splice("I.I.I.I", 1)
+   servers.splice("run4theh111z", 1)
+
+   servers = ["CSEC", "avmnite-02h", "I.I.I.I", "run4theh111z"].concat(servers)
 
    ns.singularity.connect("home")
    let previousServ = "home"
@@ -11,7 +17,7 @@ export async function backDoorAll(ns) {
    for (let i = 0; i < servers.length; i++) {
       let serv = servers[i]
 
-      if (ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
+      if ((!ns.getServer(serv).hasAdminRights) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
          continue
       }
 

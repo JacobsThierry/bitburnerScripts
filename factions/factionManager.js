@@ -1,23 +1,9 @@
+import { CONSTANTS } from "Formulas/constant";
 import { Faction } from "factions/faction"
+import { getDonationFromRep } from "factions/factionsFormulas";
 
 
 export class FactionsManager {
-
-   /** @type {FactionsManager} */
-   static instance = null;
-
-   /**
-    * Description
-    * @param {NS} ns
-    * @returns {FactionsManager}
-    */
-   static getInstance(ns) {
-      if (FactionsManager.instance == null) {
-         return (new FactionsManager(ns))
-      } else {
-         return FactionsManager.instance;
-      }
-   }
 
    /**
     * Description
@@ -28,19 +14,17 @@ export class FactionsManager {
       this.ns = ns
       this.factionsList = []
 
+
       for (let i = 0; i < Faction.factionList.length; i++) {
-         let f = new Faction(ns, Faction.factionList[i])
+         let f = new Faction(this.ns, Faction.factionList[i])
          this.factionsList.push(f)
       }
 
-      if (FactionsManager.instance == null) {
-         FactionsManager.instance = this;
-      }
    }
 
    getNextCityFaction() {
       let cityFactions = this.getCityFactionsList()
-      cityFactions = cityFactions.filter(f => (f.getAugsRemainingCount() > 1))
+      cityFactions = cityFactions.filter(f => (f.getAugsRemainingCount() > 0))
       cityFactions = cityFactions.filter(f => (f != undefined))
 
       let v = cityFactions.reduce((prev, curr) => { return prev.getCheapeastRepAug().getReputationReq() > curr.getCheapeastRepAug().getReputationReq() ? prev : curr })
@@ -59,46 +43,79 @@ export class FactionsManager {
 
    getNextFactionToWorkFor() {
       let joinedFactions = this.getJoinedFactions()
-      joinedFactions.filter(f => f.getTimeToNextAug() > 0)
-      joinedFactions.sort((a, b) => a.getTimeToNextAug() - b.getTimeToNextAug())
+      joinedFactions = joinedFactions.filter(f => f.getTimeToNextAug() > 0)
+      joinedFactions = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < 152))
+      joinedFactions = joinedFactions.sort((a, b) => a.getTimeToNextAug() - b.getTimeToNextAug())
 
       return joinedFactions[0]
    }
 
    getNonInstalledAugCount() {
-      return this.ns.singularity.getOwnedAugmentations(false).length - this.ns.singularity.getOwnedAugmentations(true).length
+      return this.ns.singularity.getOwnedAugmentations(true).length - this.ns.singularity.getOwnedAugmentations(false).length
    }
 
    loop() {
       for (let i = 0; i < this.factionsList.length; i++) {
          let faction = this.factionsList[i]
 
-         if (!faction.isCityFaction() && !faction.isJoined()) {
-            faction.joinFaction()
+         try {
+            if (!faction.isCityFaction() && !faction.isJoined()) {
+               faction.joinFaction()
+            }
+         } catch (e) {
+            this.ns.tprint(e)
          }
 
-         let nextAug = faction.getCheapeastRepAug();
 
+         let augs = faction.augmentations
 
-         if (faction.getRep() > nextAug.getReputationReq() && this.ns.getServerMoneyAvailable("home") > nextAug.getPrice()) {
-            nextAug.purchase()
+         augs.sort((a, b) => a.getPrice() - b.getPrice())
+
+         for (let j = 0; j < augs.length; j++) {
+            let a = augs[j]
+
+            if (faction.getFavor() > CONSTANTS.BaseFavorToDonate) {
+               let diff = a.getReputationReq() - faction.getRep();
+               if (diff > 0) {
+                  let donationAmt = getDonationFromRep(this.ns, diff)
+                  if (donationAmt < this.ns.getServerMoneyAvailable("home")) {
+                     faction.donate(donationAmt)
+                  }
+               }
+            }
+
+            if (faction.getRep() > a.getReputationReq() && this.ns.getServerMoneyAvailable("home") > a.getPrice()) {
+               a.purchase();
+            }
          }
-
       }
-      this.getNextCityFaction().joinFaction()
 
-      this.getNextFactionToWorkFor().workFor()
+      if (this.getNextCityFaction() != null) {
+         this.getNextCityFaction().joinFaction()
+      }
+
+      if (this.getNextFactionToWorkFor() != null) {
+         this.getNextFactionToWorkFor().workFor(this.ns.singularity.isFocused())
+      }
+
+      if (this.getNonInstalledAugCount() > 0) {
+         let revenues = parseInt(this.ns.read("/data/hackRevenues.txt"))
+
+         if (this.getNextFactionToWorkFor().getCheapeastRepAug().getPrice() > 120 * revenues) {
+            this.ns.singularity.installAugmentations("main.js")
+         }
+      }
 
    }
 
-
-
 }
-
 
 /** @param {NS} ns */
 export async function main(ns) {
+   ns.disableLog("scan")
 
-   FactionsManager.getInstance(ns).loop()
+   let fm = new FactionsManager(ns)
+
+   fm.loop();
 
 }

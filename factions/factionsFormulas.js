@@ -25,6 +25,16 @@ export function getRepFromDonation(ns, amt) {
    return (amt / CONSTANTS.DonateMoneyToRepDivisor) * person.mults.faction_rep * bnm;
 }
 
+export function getDonationFromRep(ns, amt) {
+
+   let donatedAmt = 0;
+   while (getRepFromDonation(ns, donatedAmt) < amt) {
+      donatedAmt = donatedAmt + 100000; //yes c'est horrible
+   }
+   return donatedAmt;
+
+}
+
 
 export function favorToRep(f) {
    const raw = 25000 * (Math.pow(1.02, f) - 1);

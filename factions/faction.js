@@ -21,15 +21,19 @@ export class Faction {
     * @returns {any}
     */
    constructor(ns, factionName) {
+      /** @type {NS} */
       this.ns = ns
+      /** @type {string} */
       this.factionName = factionName
 
       let aug = ns.singularity.getAugmentationsFromFaction(factionName)
 
-      this.augmentations = [new Augmentation(ns, Augmentation.neuroflux, factionName)]
+      this.augmentations = []
 
       for (let i = 0; i < aug.length; i++) {
-         this.augmentations.push(new Augmentation(ns, aug[i], factionName))
+         if (aug[i] != Augmentation.neuroflux) {
+            this.augmentations.push(new Augmentation(ns, aug[i], factionName))
+         }
       }
    }
 
@@ -38,6 +42,7 @@ export class Faction {
    }
 
    isCityFaction() {
+
       return Faction.cityFactions.includes(this.factionName)
    }
 
@@ -48,7 +53,7 @@ export class Faction {
          return
       }
 
-      execSomewhere(this.ns, "/factions/workers/joinFaction.js", 1, this.factionName)
+      execSomewhere(this.ns, "factions/workers/joinFaction.js", 1, this.factionName)
 
 
    }
@@ -64,12 +69,8 @@ export class Faction {
 
    getCheapeastRepAug() {
       let a = this.getAugsRemaining()
-      /*
-      if (this.factionName == "CyberSec") {
-         for (let i = 0; i < a.length; i++) {
-            this.ns.tprint(a[i].augmentationName)
-         }
-      }*/
+
+      a = a.filter(aug => aug.getReputationReq() > this.getRep())
 
       if (a.length > 0) {
          return a.reduce(function (prev, curr) { return prev.getReputationReq() < curr.getReputationReq() ? prev : curr })
@@ -89,7 +90,7 @@ export class Faction {
    //RepGain => par cyle. cycle = 200ms
    getTimeToNextAug() {
       let repGain = getHackingWorkRepGain(this.ns, this.ns.getPlayer(), this.getFavor()) * 5
-      return this.getCheapeastRepAug().getReputationReq() / repGain
+      return (this.getCheapeastRepAug().getReputationReq() - this.getRep()) / repGain
    }
 
    workFor(focus = false) {
@@ -104,7 +105,18 @@ export class Faction {
    }
 
    isJoined() {
-      return this.ns.getPlayer().factions.includes(this.factionName)
+
+      let facs = this.ns.getPlayer().factions
+
+
+      for (let i = 0; i < facs.length; i++) {
+         if (this.factionName == facs[i]) {
+            return true
+         }
+      }
+
+      return false
+      //return facs.includes(this.factionName)
    }
 
    getFavorGain() {
@@ -112,5 +124,13 @@ export class Faction {
       return repToFavor(rep)
    }
 
+   donate(amt) {
+
+      if (this.getFavor() < CONSTANTS.BaseFavorToDonate) {
+         return false
+      }
+
+      return this.ns.singularity.donateToFaction(this.factionName, amt)
+   }
 
 }
