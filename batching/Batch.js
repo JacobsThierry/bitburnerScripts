@@ -124,7 +124,7 @@ export class Batch {
          if (hackok == 0) {
             this.ns.print("All hack threads with the id ", this.id, " have been started")
          } else {
-            this.ns.tprint("Not all hack threads with the id ", this.id, " have been started")
+            //this.ns.tprint("Not all hack threads with the id ", this.id, " have been started")
          }
          this.dieTime = Date.now() + this.hacktime;
          this.hackStarted = true
@@ -149,7 +149,7 @@ export class Batch {
 
 
          } else {
-            this.ns.tprint("Not all weaken 1 threads with the id ", this.id, " have been started")
+            //this.ns.tprint("Not all weaken 1 threads with the id ", this.id, " have been started")
             this.selfDestroy()
          }
 
@@ -165,7 +165,7 @@ export class Batch {
          if (gok == 0) {
             this.ns.print("All grow threads with the id ", this.id, " have been started")
          } else {
-            this.ns.tprint("Not all grow threads with the id ", this.id, " have been started")
+            //this.ns.tprint("Not all grow threads with the id ", this.id, " have been started")
          }
          this.growStarted = true;
       }
@@ -185,7 +185,7 @@ export class Batch {
          if (w2ok == 0) {
             this.ns.print("All weaken 2 threads with the id ", this.id, " have been started")
          } else {
-            this.ns.tprint("Not all weaken 2 threads with the id ", this.id, " have been started")
+            //this.ns.tprint("Not all weaken 2 threads with the id ", this.id, " have been started")
             this.selfDestroy()
          }
 
@@ -334,7 +334,13 @@ export class Batcher {
       let timeWithoutGrow = calculateWeakenTime(serv, p) - calculateGrowTime(serv, p)
       let periodWithoutGrow = timeWithoutGrow / this.getPeriod()
 
-      return Math.ceil(totalThread - (periodWithoutHack * ht - periodWithoutGrow * gt))
+      let res = Math.ceil(totalThread - (periodWithoutHack * ht - periodWithoutGrow * gt))
+
+      if (!isNaN(res) && !(res == undefined)) {
+         return res
+      } else {
+         return this.threadsCount()
+      }
    }
 
    compareTrueThreadCount() {
@@ -369,9 +375,9 @@ export class Batcher {
          return 0
       }
 
-      let moneyPerPeriod = Math.min(Math.floor(serv.moneyMax * calculatePercentMoneyHacked(this.ns, serv, this.ns.getPlayer())) * ht, serv.moneyMax)
+      let moneyPerPeriod = Math.min(Math.floor(serv.moneyMax * calculatePercentMoneyHacked(this.ns, serv, this.ns.getPlayer()) * ht), serv.moneyMax)
 
-      let periodSec = period * 0.001;
+      let periodSec = (period) * 0.001;
       let moneyPerSec = moneyPerPeriod / periodSec;
 
       moneyPerSec = moneyPerSec * calculateHackingChance(serv, this.ns.getPlayer())
@@ -442,6 +448,14 @@ export class Batcher {
                }
             }
          }
+      }
+
+      if (depth == undefined) {
+         depth = 1
+      }
+      if (period == undefined) {
+         let { weak_time, grow_time, hack_time } = this.times()
+         period = weak_time + 4 * this.t0
       }
 
       return { depth, period }

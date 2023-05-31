@@ -44,7 +44,10 @@ export class Main {
    }
 
    writeRevenues() {
-      this.ns.write("/data/hackRevenues.txt", Math.floor(this.manager.getRevenues()), "w")
+      let revenues = Math.floor(this.manager.getRevenues())
+      if (revenues != 0) {
+         this.ns.write("/data/hackRevenues.txt", revenues, "w")
+      }
    }
 
    loop() {
@@ -55,18 +58,20 @@ export class Main {
          execSomewhere(this.ns, "codingContracts/solveContracts.js")
 
       }
+      if (this.clock == 50) {
+         execSomewhere(this.ns, "programs/buyTor.js")
+      }
 
       if (this.clock == 100) {
-         execSomewhere(this.ns, "factions/factionManager.js")
+         //execSomewhere(this.ns, "factions/factionManager.js")
+         this.ns.exec("factions/factionManager.js", "home")
       }
 
       if (this.clock == 200) {
          execSomewhere(this.ns, "servers/backDoorer.js")
       }
 
-      if (this.clock == 300) {
-         execSomewhere(this.ns, "programs/buyTor.js")
-      }
+
 
       if (this.clock == 900) {
          this.writeRevenues()
@@ -87,7 +92,7 @@ export async function main(ns) {
    while (true) {
 
       m.loop()
-      await ns.sleep(10);
+      await ns.sleep(5);
    }
 }
 

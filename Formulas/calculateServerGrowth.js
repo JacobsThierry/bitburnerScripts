@@ -26,13 +26,17 @@ export function calculateServerGrowth(ns, server, threads, p, cores = 1) {
    const serverGrowthPercentage = server.serverGrowth / 100;
 
    let bnm = 1
+   let bitnode = 0
    try {
-      let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
-      bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
-      bnm = bitNodeMultipliers.ServerGrowthRate;
+      bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+
    } catch {
-      bnm = 1;
+      bitnode = 1
    }
+   let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+   bnm = bitNodeMultipliers.ServerGrowthRate;
+
+
 
    const numServerGrowthCyclesAdjusted =
       numServerGrowthCycles * serverGrowthPercentage * bnm;

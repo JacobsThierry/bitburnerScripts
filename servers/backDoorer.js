@@ -1,5 +1,6 @@
 import { findAllServers } from "servers/findAllServers";
 import { getPathToServer } from "servers/getPathToServer";
+import { execSomewhere } from "servers/ramManager";
 /** @param {NS} ns */
 export async function backDoorAll(ns) {
 
@@ -18,7 +19,7 @@ export async function backDoorAll(ns) {
    for (let i = 0; i < servers.length; i++) {
       let serv = servers[i]
 
-      if ((!(serv == "w0rld_d43m0n")) || (!ns.getServer(serv).backdoorInstalled) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
+      if (!ns.getServer(serv).hasAdminRights || ((serv == "w0rld_d43m0n")) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
          continue
       }
 
@@ -30,6 +31,9 @@ export async function backDoorAll(ns) {
 
 
       await ns.singularity.installBackdoor()
+
+      //execSomewhere(ns, "/servers/backDoorerWorker.js")
+      //await ns.sleep(10)
 
       previousServ = serv
 
@@ -43,6 +47,10 @@ export async function backDoorAll(ns) {
 /** @param {NS} ns */
 export async function main(ns) {
    ns.disableLog("scan")
+   ns.disableLog("getServerUsedRam")
+   ns.disableLog("getServerMaxRam")
+   ns.disableLog("getServerMaxRam")
+
    try {
       await backDoorAll(ns)
    } catch {

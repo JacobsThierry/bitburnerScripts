@@ -79,6 +79,10 @@ export class Faction {
       }
    }
 
+   isUnlocked() {
+      return this.ns.getPlayer().factions.includes(this.factionName) || this.ns.singularity.checkFactionInvitations().includes(this.factionName)
+   }
+
    getCheapeastAug() {
       let a = this.getAugsRemaining()
 

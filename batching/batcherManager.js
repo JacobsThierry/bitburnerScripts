@@ -7,6 +7,7 @@ import { resetServer } from "hackingFunctions/resetServer"
 import { calculateWeakenTime } from "Formulas/calculateWeakenTime"
 
 import { openAllPorts } from "servers/portOpener"
+import { CONSTANTS } from "Formulas/constant";
 
 
 export class BatcherManager {
@@ -23,14 +24,14 @@ export class BatcherManager {
 
       this.clock = 0
 
+      this.lastShare = 0
+
       /**@type {Batcher[]} */
       this.batchers = []
    }
 
 
    loop() {
-
-
       if (this.clock == 0) {
          //Optimizing the currently running batches
          let totalThreadsAvailable = this.getTotalThreadsAvailable()
@@ -41,9 +42,6 @@ export class BatcherManager {
             }
 
             let batcher = this.batchers[i]
-
-
-
             let batcherOpt = optimizeBatch(this.ns, batcher, totalThreadsAvailable + batcher.trueThreadsCount())
 
 
@@ -67,7 +65,7 @@ export class BatcherManager {
                bestServers = bestServers.filter(serv => !(this.batchers.some(batcher => batcher.server.trim() == serv[0].server.trim())))
 
                let b = bestServers[0][0]
-               optimizeBatch(this.ns, b, totalThreadsAvailable);
+               b = optimizeBatch(this.ns, b, totalThreadsAvailable);
 
                let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
 
@@ -81,20 +79,35 @@ export class BatcherManager {
 
 
 
-
+      this.manageShare()
       this.clock = (this.clock + 1) % 6000
       for (let i = 0; i < this.batchers.length; i++) {
 
          let bat = this.batchers[i]
          bat.loop()
-
          //bat.compareThreadCount2()
-
       }
    }
 
+
+   shareScript = "hackingFunctions/share.js"
+
+
+   manageShare() {
+      let threadsAvailable = this.getTotalThreadsAvailable();
+      if ((Date.now() - this.lastShare) > 10000) {
+         this.lastShare = Date.now()
+         let shareThreads = Math.floor(threadsAvailable / 4)
+         //execSomewhere(this.ns, this.shareScript, shareThreads)
+         if (shareThreads > 0) {
+            this.ns.exec(this.shareScript, "home", shareThreads)
+         }
+      }
+
+   }
+
    getTotalThreadsAvailable() {
-      return (getMaximumInstanceOfScript(this.ns, "/hackingFunctions/grow_delay.js", true) - this.sumThreadUsage())
+      return (getMaximumInstanceOfScript(this.ns, "hackingFunctions/grow_delay.js", true) - this.sumThreadUsage())
    }
 
    getRevenues() {
@@ -122,7 +135,11 @@ export class BatcherManager {
       let sum = 0
       for (let i = 0; i < this.batchers.length; i++) {
          let b = this.batchers[i]
-         sum += b.trueThreadsCount()
+         let tc = b.trueThreadsCount()
+
+         if (!isNaN(tc) && !(tc == null)) {
+            sum += tc
+         }
       }
       return sum
 

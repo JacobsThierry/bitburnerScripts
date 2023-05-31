@@ -161,6 +161,12 @@ export class serverResetter {
 
 
    loop() {
+
+      this.gthread = this.gthread == null ? 0 : this.gthread
+      this.gthread = this.gthread == NaN ? 0 : this.gthread
+      this.weakenThread = this.weakenThread == null ? 0 : this.weakenThread
+      this.weakenThread = this.weakenThread == NaN ? 0 : this.weakenThread
+
       //weaken 1
       if (this.state == 0) {
          this.state0()

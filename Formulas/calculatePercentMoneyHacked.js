@@ -12,13 +12,15 @@ export function calculatePercentMoneyHacked(ns, server, person) {
    const balanceFactor = 240;
 
    let bnm = 0
+   let bitnode = 0
    try {
-      let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
-      let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
-      bnm = bitNodeMultipliers.ScriptHackMoney;
+      bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+
    } catch {
-      bnm = 1;
+      bitnode = 1
    }
+   let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+   bnm = bitNodeMultipliers.ScriptHackMoney;
 
    const difficultyMult = (100 - server.hackDifficulty) / 100;
    const skillMult = (person.skills.hacking - (server.requiredHackingSkill - 1)) / person.skills.hacking;

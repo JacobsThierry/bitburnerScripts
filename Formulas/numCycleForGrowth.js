@@ -1,4 +1,5 @@
 
+import { myGetBitNodeMultipliers } from "Formulas/bitNode/getBitNodeMultipliers";
 import { CONSTANTS } from "Formulas/constant"
 /**
  * Returns the number of "growth cycles" needed to grow the specified server by the
@@ -22,13 +23,16 @@ export function numCycleForGrowth(ns, server, player, growth, cores = 1) {
 
 
    let bnm = 0
+   let bitnode = 0
    try {
-      let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
-      let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
-      bnm = bitNodeMultipliers.ServerGrowthRate;
+      bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+
    } catch {
-      bnm = 1;
+      bitnode = 1;
    }
+
+   let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+   bnm = bitNodeMultipliers.ServerGrowthRate;
 
    const cycles =
       Math.log(growth) /

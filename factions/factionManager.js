@@ -53,10 +53,14 @@ export class FactionsManager {
    }
 
    getCheapeastAug() {
+
       let fac = this.getJoinedFactions().reduce((previous, current) => {
-         if (current == null) return previous
+
+         if (current.getCheapeastAug() == null) { return previous }
+         if (previous.getCheapeastAug() == null) { return current }
          return previous.getCheapeastAug().getAugPrice() < current.getCheapeastAug().getAugPrice() ? previous : current
       })
+
 
       return fac.getCheapeastAug()
 
@@ -109,36 +113,51 @@ export class FactionsManager {
          }
       }
 
-      if (this.getNextCityFaction() != null) {
-         this.getNextCityFaction().joinFaction()
+      let nextCityFaction = this.getNextCityFaction()
+
+      if (nextCityFaction != null) {
+
+         if (this.ns.getPlayer().city != nextCityFaction.factionName && this.ns.getServerMoneyAvailable("home") > 15e6) {
+            execSomewhere(this.ns, "factions/workers/traveller.js", 1, nextCityFaction.factionName)
+         }
+
+         nextCityFaction.joinFaction()
       }
 
-      if (this.getNextFactionToWorkFor() != null) {
-         this.getNextFactionToWorkFor().workFor(this.ns.singularity.isFocused())
+      let workFor = this.getNextFactionToWorkFor()
+      if (workFor != null) {
+         if (workFor.getAugsRemainingCount() > 0) {
+            this.getNextFactionToWorkFor().workFor(true)
+         }
       }
+      this.checkForReset()
+   }
 
 
+   checkForReset() {
       if (this.getNonInstalledAugCount() > 0) {
          let revenues = parseInt(this.ns.read("/data/hackRevenues.txt"))
 
          let lastReset = -1;
+         let d = this.ns.read("/data/lastInstall.txt")
+         if (d.length != 0) {
+            lastReset = parseInt(d)
+         }
 
-         try {
-            lastReset = parseInt(this.ns.read("/data/lastInstall.txt"))
-         } catch { }
+
 
          let firstBuy = -1;
 
-         try {
-            firstBuy = parseInt(this.ns.read("/data/timeOfFirstBuy.txt"))
-         } catch { }
-
-
+         d = this.ns.read("/data/timeOfFirstBuy.txt")
+         if (d.length != 0) {
+            firstBuy = parseInt(d)
+         }
 
 
          let timeSinceLastReset = Date.now() - lastReset
          let timeToFirstAug = lastReset - firstBuy
          let timeToAffordNextAug = this.getCheapeastAug().getAugPrice() / revenues
+
 
          if (timeToFirstAug < timeToAffordNextAug || lastReset == -1) {
 
@@ -147,16 +166,17 @@ export class FactionsManager {
                //this.ns.singularity.purchaseAugmentation(highestRep.factionName, Augmentation.neuroflux);
 
                execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js", 1, highestRep.factionName);
-
             }
-
+            this.ns.write("/data/lastInstall.txt", Date.now(), "w")
             execSomewhere(this.ns, "factions/workers/installAugs.js");
          }
 
       }
    }
-
 }
+
+
+
 
 /** @param {NS} ns */
 export async function main(ns) {

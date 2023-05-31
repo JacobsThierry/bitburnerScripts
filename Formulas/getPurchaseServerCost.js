@@ -13,17 +13,18 @@ export function myGetPurchaseServerCost(ns, ram) {
 
    let PurchasedServerCost = 1
    let PurchasedServerSoftcap = 1
+   let bitNode = 0
    try {
       //PurchasedServerSoftcap = ns.getBitNodeMultipliers().PurchasedServerSoftcap();
       //PurchasedServerCost = ns.getBitNodeMultipliers().PurchasedServerCost();
 
-      let bitNode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
-
-      PurchasedServerCost = myGetBitNodeMultipliers(bitNode, 1).PurchasedServerCost;
-      PurchasedServerSoftcap = myGetBitNodeMultipliers(bitNode, 1).PurchasedServerSoftcap;
+      bitNode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
 
 
-   } catch { }
+   } catch { bitNode = 1 }
+
+   PurchasedServerCost = myGetBitNodeMultipliers(bitNode, 1).PurchasedServerCost;
+   PurchasedServerSoftcap = myGetBitNodeMultipliers(bitNode, 1).PurchasedServerSoftcap;
 
    return (
       sanitizedRam *

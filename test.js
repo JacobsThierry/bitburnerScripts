@@ -37,7 +37,12 @@ export async function main(ns) {
 
    //ns.print(await getPathToServer(ns, "home", "megacorp"))
 
-   ns.tprint(ns.codingcontract.getContractTypes())
+   //ns.tprint(ns.codingcontract.getContractTypes())
+
+   //let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+   //ns.tprint(bitnode)
+
+   ns.exec("hackingFunctions/share.js", "home")
 
 
 }

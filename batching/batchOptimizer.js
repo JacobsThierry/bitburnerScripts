@@ -29,7 +29,7 @@ export function optimizeBatch(ns, batcher, maxThreads = -1) {
    batcher.percentStolen = maxPercentStolen;
    batcher.t0 = maxT0;
 
-   let maxloop = 100000
+   let maxloop = 500000
    let clock = 0;
    while (batcher.trueThreadsCount() > maxThreads && maxloop-- > 0) {
       if (clock == 0) {

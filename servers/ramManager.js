@@ -79,6 +79,10 @@ export function execSomewhere(ns, script, threads = 1, ...args) {
 
       let ramAvailable = ns.getServerMaxRam(serv) - ns.getServerUsedRam(serv);
 
+      if (serv == "home") {
+         ramAvailable -= (ns.getScriptRam("mainLoop.js", "home") + ns.getScriptRam("factions/factionManager.js", "home"))
+      }
+
 
       let threadRoom = Math.min(threads, Math.floor(ramAvailable / scriptRam));
 
@@ -118,11 +122,11 @@ export function getMaximumInstanceOfScript(ns, script, ignoreCurrentUsage = fals
       if (!ignoreCurrentUsage) {
          ramAvailable -= ns.getServerUsedRam(serv)
       }
-      /*
-            if (serv == "home") {
-               ramAvailable -= 8;
-            }
-      */
+
+      if (serv == "home") {
+         ramAvailable -= (ns.getScriptRam("mainLoop.js", "home") + ns.getScriptRam("factions/factionManager.js", "home"))
+      }
+
       let threadRoom = Math.floor(ramAvailable / scriptRam);
       if (threadRoom > 0) {
          instances += threadRoom;
