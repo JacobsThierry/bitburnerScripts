@@ -29,7 +29,11 @@ export class FactionsManager {
       cityFactions = cityFactions.filter(f => (f.getAugsRemainingCount() > 0))
       cityFactions = cityFactions.filter(f => (f != undefined))
 
-      let v = cityFactions.reduce((prev, curr) => { return prev.getCheapeastRepAug().getReputationReq() > curr.getCheapeastRepAug().getReputationReq() ? prev : curr })
+      let v = cityFactions.reduce((prev, curr) => {
+         if (prev.getCheapeastRepAug() == null) return curr
+         if (curr.getCheapeastRepAug() == null) return prev
+         return prev.getCheapeastRepAug().getReputationReq() > curr.getCheapeastRepAug().getReputationReq() ? prev : curr
+      })
 
       return v
    }
@@ -52,7 +56,7 @@ export class FactionsManager {
       return joinedFactions[0]
    }
 
-   getCheapeastAug() {
+   getCheapeastAugFaction() {
 
       let fac = this.getJoinedFactions().reduce((previous, current) => {
 
@@ -62,7 +66,13 @@ export class FactionsManager {
       })
 
 
-      return fac.getCheapeastAug()
+      return fac
+
+   }
+
+   getCheapeastAug() {
+
+      return this.getCheapeastAugFaction().getCheapeastAug()
 
    }
 
@@ -156,10 +166,26 @@ export class FactionsManager {
 
          let timeSinceLastReset = Date.now() - lastReset
          let timeToFirstAug = lastReset - firstBuy
-         let timeToAffordNextAug = this.getCheapeastAug().getAugPrice() / revenues
 
+         this.ns.tprint("Revenues = ", this.ns.formatNumber(revenues))
+         this.ns.tprint("Next aug = ", this.getCheapeastAug().augmentationName, " ", this.ns.formatNumber(this.getCheapeastAug().getAugPrice()))
 
-         if (timeToFirstAug < timeToAffordNextAug || lastReset == -1) {
+         //1000* coz revenues is in sec
+         let timeToAffordNextAug = 1000 * this.getCheapeastAug().getAugPrice() / (revenues)
+
+         let cheapestAugFaction = this.getCheapeastAugFaction()
+         let timeToRepNextReset = cheapestAugFaction.getTimeToNextAug(cheapestAugFaction.getFavorNextReset(), true)
+
+         let nextResetFavor = false
+
+         if (cheapestAugFaction.getFavor() < CONSTANTS.BaseFavorToDonate) {
+            if (cheapestAugFaction.getFavorNextReset() >= CONSTANTS.BaseFavorToDonate) {
+               nextResetFavor = true
+            }
+         }
+
+         //Reset if we can't afford the new aug, or if it take less time to reset and gain the rep than to afford the aug, or if we can now donate to the faction
+         if ((timeToFirstAug / 2) < timeToAffordNextAug || lastReset == -1 || timeToRepNextReset < timeToAffordNextAug || nextResetFavor) {
 
             let highestRep = this.getHighestRepFaction()
             for (let q = 0; q < 10; q++) {

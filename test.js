@@ -8,6 +8,8 @@ import * as rm from "servers/ramManager"
 import * as fas from "servers/findAllServers"
 
 import { getPathToServer } from "servers/getPathToServer"
+import { calculatePercentMoneyHacked } from "Formulas/calculatePercentMoneyHacked"
+import { getRepFromDonation } from "factions/factionsFormulas"
 
 /** @param {NS} ns */
 export async function main(ns) {
@@ -42,7 +44,11 @@ export async function main(ns) {
    //let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
    //ns.tprint(bitnode)
 
-   ns.exec("hackingFunctions/share.js", "home")
+   //ns.exec("hackingFunctions/share.js", "home")
 
+   //ns.print(ns.getServerMaxMoney("n00dles"), " ", ns.getServerMaxMoney("n00dles") * calculatePercentMoneyHacked(ns, ns.getServer("n00dles"), ns.getPlayer()))
+
+
+   //ns.print(getRepFromDonation(ns, 10000))
 
 }

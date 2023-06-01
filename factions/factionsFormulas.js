@@ -27,12 +27,27 @@ export function getRepFromDonation(ns, amt) {
 
 export function getDonationFromRep(ns, amt) {
 
+   let person = ns.getPlayer()
+   let bnm = 0
+
+   try {
+      let bitnode = JSON.parse(ns.read("/data/resetInfo.txt")).currentNode
+      let bitNodeMultipliers = myGetBitNodeMultipliers(bitnode)
+      bnm = bitNodeMultipliers.FactionWorkRepGain;
+   } catch {
+      bnm = 1;
+   }
+
+   return CONSTANTS.DonateMoneyToRepDivisor * amt / (person.mults.faction_rep * bnm)
+
+
+   /*
    let donatedAmt = 0;
    while (getRepFromDonation(ns, donatedAmt) < amt) {
-      donatedAmt = donatedAmt + 100000; //yes c'est horrible
+      donatedAmt = donatedAmt * 1.1; //yes c'est horrible
    }
    return donatedAmt;
-
+*/
 }
 
 

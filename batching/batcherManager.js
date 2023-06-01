@@ -95,10 +95,17 @@ export class BatcherManager {
 
    manageShare() {
       let threadsAvailable = this.getTotalThreadsAvailable();
-      if ((Date.now() - this.lastShare) > 10000) {
+      if ((Date.now() - this.lastShare) > 10100) {
          this.lastShare = Date.now()
          let shareThreads = Math.floor(threadsAvailable / 4)
          //execSomewhere(this.ns, this.shareScript, shareThreads)
+
+         let ramAvailable = this.ns.getServerMaxRam("home") - this.ns.getScriptRam("mainLoop.js", "home") - this.ns.getScriptRam("factions/factionManager.js");
+         let scriptRam = this.ns.getScriptRam(this.shareScript)
+         let threadRoom = Math.floor(ramAvailable / scriptRam);
+
+         shareThreads = Math.min(shareThreads, threadRoom)
+
          if (shareThreads > 0) {
             this.ns.exec(this.shareScript, "home", shareThreads)
          }

@@ -104,14 +104,23 @@ export class Faction {
    }
 
    //RepGain => par cyle. cycle = 200ms
-   getTimeToNextAug() {
+   getTimeToNextAug(favor = -1, ignoreCurrentRep = false) {
+
+      if (favor == -1) {
+         favor = this.getFavor()
+      }
 
       if (this.getCheapeastRepAug() == null) {
          return Infinity
       }
 
-      let repGain = getHackingWorkRepGain(this.ns, this.ns.getPlayer(), this.getFavor()) * 5
-      return (this.getCheapeastRepAug().getReputationReq() - this.getRep()) / repGain
+      let repGain = getHackingWorkRepGain(this.ns, this.ns.getPlayer(), favor) * 5
+      let repToGo = this.getCheapeastRepAug().getReputationReq()
+      if (!ignoreCurrentRep) {
+         repToGo -= this.getRep()
+      }
+
+      return (repToGo) / repGain
    }
 
    workFor(focus = false) {
@@ -143,6 +152,10 @@ export class Faction {
    getFavorGain() {
       let rep = this.getRep()
       return repToFavor(rep)
+   }
+
+   getFavorNextReset() {
+      return this.getFavor() + this.getFavorGain()
    }
 
    donate(amt) {
