@@ -1,15 +1,15 @@
 
 
-export class compagny {
+export class Compagny {
 
    //Faction name => compagny name
    static compagnyFaction = {
+      "Blade Industries": "Blade Industries",
       "ECorp": "ECorp",
       "MegaCorp": "MegaCorp",
       "KuaiGong International": "KuaiGong International",
       "Four Sigma": "Four Sigma",
       "NWO": "NWO",
-      "Blade Industries": "Blade Industries",
       "OmniTek Incorporated": "OmniTek Incorporated",
       "Bachman & Associates": "Bachman & Associates",
       "Clarke Incorporated": "Clarke Incorporated",
@@ -30,6 +30,9 @@ export class compagny {
 
 
    workForCompagny() {
+
+      this.ns.singularity.applyToCompany(this.compagnyName, "IT")
+
       return this.ns.singularity.workForCompany(this.compagnyName, true)
    }
 

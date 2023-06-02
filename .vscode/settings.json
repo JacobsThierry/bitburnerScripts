@@ -4,4 +4,5 @@
       "jsconfig.json": true,
       "NetscriptDefinitions.d.ts": true,
    },
+   "workbench.colorCustomizations": {},
 }

@@ -64,7 +64,8 @@ export class Main {
 
       if (this.clock == 100) {
          //execSomewhere(this.ns, "factions/factionManager.js")
-         this.ns.exec("factions/factionManager.js", "home")
+         //this.ns.exec("factions/factionManager.js", "home")
+         this.ns.exec("factions/factionMain.js", "home")
       }
 
       if (this.clock == 200) {

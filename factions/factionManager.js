@@ -29,6 +29,10 @@ export class FactionsManager {
       cityFactions = cityFactions.filter(f => (f.getAugsRemainingCount() > 0))
       cityFactions = cityFactions.filter(f => (f != undefined))
 
+      if (cityFactions.length == 0) {
+         return null
+      }
+
       let v = cityFactions.reduce((prev, curr) => {
          if (prev.getCheapeastRepAug() == null) return curr
          if (curr.getCheapeastRepAug() == null) return prev
@@ -50,13 +54,21 @@ export class FactionsManager {
    getNextFactionToWorkFor() {
       let joinedFactions = this.getJoinedFactions()
       joinedFactions = joinedFactions.filter(f => f.getTimeToNextAug() > 0)
-      joinedFactions = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < 152))
       joinedFactions = joinedFactions.sort((a, b) => a.getTimeToNextAug() - b.getTimeToNextAug())
+      let joinedFactionsWithoutFavor = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < CONSTANTS.BaseFavorToDonate))
 
-      return joinedFactions[0]
+      if (joinedFactionsWithoutFavor.length == 0 || joinedFactionsWithoutFavor[0] == null) {
+         return joinedFactions[0]
+      }
+
+      return joinedFactionsWithoutFavor[0]
    }
 
    getCheapeastAugFaction() {
+
+      if (this.getJoinedFactions().length == 0) {
+         return null
+      }
 
       let fac = this.getJoinedFactions().reduce((previous, current) => {
 
@@ -100,25 +112,32 @@ export class FactionsManager {
          }
 
 
-         let augs = faction.augmentations
+         let augs = faction.getAugsRemaining()
 
          augs.sort((a, b) => a.getAugPrice() - b.getAugPrice())
 
          for (let j = 0; j < augs.length; j++) {
             let a = augs[j]
 
-            if (faction.getFavor() > CONSTANTS.BaseFavorToDonate) {
+            if (faction.getFavor() > CONSTANTS.BaseFavorToDonate && faction.isJoined()) {
                let diff = a.getReputationReq() - faction.getRep();
                if (diff > 0) {
                   let donationAmt = getDonationFromRep(this.ns, diff)
                   if (donationAmt < this.ns.getServerMoneyAvailable("home")) {
+
                      faction.donate(donationAmt)
+                     this.ns.tprint("Donated ", donationAmt, " to ", faction.factionName)
                   }
                }
             }
 
-            if (faction.getRep() > a.getReputationReq() && this.ns.getServerMoneyAvailable("home") > a.getAugPrice()) {
+            if (!a.isOwned() && faction.getRep() > a.getReputationReq() && this.ns.getServerMoneyAvailable("home") > a.getAugPrice()) {
                a.purchase();
+
+               if (a.augmentationName == "The Red Pill") {
+                  this.reset()
+               }
+
             }
          }
       }
@@ -145,71 +164,77 @@ export class FactionsManager {
 
 
    checkForReset() {
-      if (this.getNonInstalledAugCount() > 0) {
-         let revenues = parseInt(this.ns.read("/data/hackRevenues.txt"))
 
-         let lastReset = -1;
-         let d = this.ns.read("/data/lastInstall.txt")
-         if (d.length != 0) {
-            lastReset = parseInt(d)
-         }
+      let revenues = parseInt(this.ns.read("/data/hackRevenues.txt"))
 
-
-
-         let firstBuy = -1;
-
-         d = this.ns.read("/data/timeOfFirstBuy.txt")
-         if (d.length != 0) {
-            firstBuy = parseInt(d)
-         }
+      let lastReset = -1;
+      let d = this.ns.read("/data/lastInstall.txt")
+      if (d.length != 0) {
+         lastReset = parseInt(d)
+      }
 
 
-         let timeSinceLastReset = Date.now() - lastReset
-         let timeToFirstAug = lastReset - firstBuy
 
-         this.ns.tprint("Revenues = ", this.ns.formatNumber(revenues))
-         this.ns.tprint("Next aug = ", this.getCheapeastAug().augmentationName, " ", this.ns.formatNumber(this.getCheapeastAug().getAugPrice()))
+      let firstBuy = -1;
 
+      d = this.ns.read("/data/timeOfFirstBuy.txt")
+      if (d.length != 0) {
+         firstBuy = parseInt(d)
+      }
+
+
+      let timeSinceLastReset = Date.now() - lastReset
+      let timeToFirstAug = lastReset - firstBuy
+      /*
+      this.ns.tprint("Revenues = ", this.ns.formatNumber(revenues))
+      this.ns.tprint("Next aug = ", this.getCheapeastAug().augmentationName, " ", this.ns.formatNumber(this.getCheapeastAug().getAugPrice()))
+*/
+      let cheapestAug = this.getCheapeastAug()
+      let timeToAffordNextAug = 0
+
+      if (!cheapestAug == null) {
          //1000* coz revenues is in sec
-         let timeToAffordNextAug = 1000 * this.getCheapeastAug().getAugPrice() / (revenues)
+         timeToAffordNextAug = 1000 * cheapestAug.getAugPrice() / (revenues)
+      } else {
+         timeToAffordNextAug = Infinity
+      }
 
-         let cheapestAugFaction = this.getCheapeastAugFaction()
-         let timeToRepNextReset = cheapestAugFaction.getTimeToNextAug(cheapestAugFaction.getFavorNextReset(), true)
+      let cheapestAugFaction = this.getCheapeastAugFaction()
+      let timeToRepNextReset = cheapestAugFaction.getTimeToNextAug(cheapestAugFaction.getFavorNextReset(), true)
+      let nextResetFavor = false
 
-         let nextResetFavor = false
+      if (cheapestAugFaction.getFavor() < CONSTANTS.BaseFavorToDonate) {
+         if (cheapestAugFaction.getFavorNextReset() >= CONSTANTS.BaseFavorToDonate) {
 
-         if (cheapestAugFaction.getFavor() < CONSTANTS.BaseFavorToDonate) {
-            if (cheapestAugFaction.getFavorNextReset() >= CONSTANTS.BaseFavorToDonate) {
+            if ((timeToFirstAug / 2) < timeToRepNextReset) {
+
                nextResetFavor = true
             }
          }
-
-         //Reset if we can't afford the new aug, or if it take less time to reset and gain the rep than to afford the aug, or if we can now donate to the faction
-         if ((timeToFirstAug / 2) < timeToAffordNextAug || lastReset == -1 || timeToRepNextReset < timeToAffordNextAug || nextResetFavor) {
-
-            let highestRep = this.getHighestRepFaction()
-            for (let q = 0; q < 10; q++) {
-               //this.ns.singularity.purchaseAugmentation(highestRep.factionName, Augmentation.neuroflux);
-
-               execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js", 1, highestRep.factionName);
-            }
-            this.ns.write("/data/lastInstall.txt", Date.now(), "w")
-            execSomewhere(this.ns, "factions/workers/installAugs.js");
-         }
-
       }
+
+      //Reset if we can't afford the new aug, or if it take less time to reset and gain the rep than to afford the aug, or if we can now donate to the faction
+      if ((this.getNonInstalledAugCount() > 0 && ((timeToFirstAug / 2) < timeToAffordNextAug || lastReset == -1 || timeToRepNextReset < timeToAffordNextAug)) || nextResetFavor) {
+
+         this.reset()
+      }
+
    }
-}
 
-
-
-
-/** @param {NS} ns */
-export async function main(ns) {
-   ns.disableLog("scan")
-
-   let fm = new FactionsManager(ns)
-
-   fm.loop();
+   reset() {
+      let highestRep = this.getHighestRepFaction()
+      //TODO : donate so we have enough rep to buy the neurofux
+      for (let q = 0; q < 10; q++) {
+         execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js", 1, highestRep.factionName);
+      }
+      this.ns.write("/data/lastInstall.txt", Date.now(), "w")
+      execSomewhere(this.ns, "factions/workers/installAugs.js");
+   }
 
 }
+
+
+
+
+
+
