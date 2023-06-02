@@ -1,7 +1,5 @@
 import { CONSTANTS } from "Formulas/constant"
 import { Compagny } from "factions/compagny/compagny"
-import { Faction } from "factions/faction"
-import { FactionsManager } from "factions/factionManager"
 
 export class CompagnyManager {
 
@@ -9,7 +7,6 @@ export class CompagnyManager {
    /**
     * Description
     * @param {NS} ns
-    * @param {FactionsManager} factionManager
     * @returns {any}
     */
    constructor(ns, factionManager) {
@@ -17,7 +14,7 @@ export class CompagnyManager {
       let compagnies = Object.values(Compagny.compagnyFaction)
 
       this.ns = ns
-      this.factionManager = factionManager
+
 
       this.compagnies = []
 
@@ -27,7 +24,16 @@ export class CompagnyManager {
    }
 
    canWork() {
-      return this.factionManager.getNextFactionToWorkFor() == null
+
+      let factionsToWorkFor = null
+
+      try {
+         factionsToWorkFor = JSON.parse(this.ns.read("/data/joinedFactionsWithoutFavor.txt"))
+      } catch {
+         factionsToWorkFor = []
+      }
+
+      return factionsToWorkFor.length == 0
    }
 
 
@@ -39,7 +45,7 @@ export class CompagnyManager {
       let com = Compagny.compagnyFaction
 
       let filtered = Object.keys(com).reduce((filtered, key) => {
-         if (this.ns.singularity.getCompanyRep(com[key]) < CONSTANTS.CorpFactionRepRequirement && !(new Faction(this.ns, key)).isJoined()) {
+         if (this.ns.singularity.getCompanyRep(com[key]) < CONSTANTS.CorpFactionRepRequirement && !(this.ns.getPlayer().factions.includes(key))) {
             filtered[key] = com[key]
          }
          return filtered
@@ -56,10 +62,19 @@ export class CompagnyManager {
 
    loop() {
 
+
+
       if (this.canWork()) {
 
          this.compagnyToWorkFor()[0].workForCompagny()
       }
    }
 
+}
+
+/** @param {NS} ns */
+export async function main(ns) {
+   ns.disableLog("scan")
+   let compagnyManager = new CompagnyManager(ns)
+   compagnyManager.loop()
 }

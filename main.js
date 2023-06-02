@@ -19,6 +19,17 @@ export async function main(ns) {
       await ns.sleep(100)
    }
 
+   maxTry = 500
+   while (ns.exec("factions/workers/getAugsFromFaction.js", "home") == 0 && maxTry-- > 0) {
+      await ns.sleep(100)
+   }
+
+   maxTry = 500
+   while (ns.exec("factions/workers/getAugmentationRepReq.js", "home") == 0 && maxTry-- > 0) {
+      await ns.sleep(100)
+   }
+
+
    if (ns.exec("mainLoop.js", "home") != 0) {
       return
    } else {

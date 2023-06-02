@@ -1,5 +1,4 @@
 import { CONSTANTS } from "Formulas/constant";
-import { Augmentation } from "factions/augmentation";
 import { Faction } from "factions/faction"
 import { getDonationFromRep } from "factions/factionsFormulas";
 import { execSomewhere } from "servers/ramManager";
@@ -53,13 +52,18 @@ export class FactionsManager {
 
    getNextFactionToWorkFor() {
       let joinedFactions = this.getJoinedFactions()
+      joinedFactions = joinedFactions.filter(f => f.getAugsRemainingCount() > 0)
       joinedFactions = joinedFactions.filter(f => f.getTimeToNextAug() > 0)
       joinedFactions = joinedFactions.sort((a, b) => a.getTimeToNextAug() - b.getTimeToNextAug())
       let joinedFactionsWithoutFavor = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < CONSTANTS.BaseFavorToDonate))
+      /*
+            if (joinedFactionsWithoutFavor.length == 0 || joinedFactionsWithoutFavor[0] == null) {
+               return joinedFactions[0]
+            }
+      */
 
-      if (joinedFactionsWithoutFavor.length == 0 || joinedFactionsWithoutFavor[0] == null) {
-         return joinedFactions[0]
-      }
+
+      this.ns.write("/data/joinedFactionsWithoutFavor.txt", JSON.stringify(joinedFactionsWithoutFavor), "w")
 
       return joinedFactionsWithoutFavor[0]
    }
@@ -83,6 +87,10 @@ export class FactionsManager {
    }
 
    getCheapeastAug() {
+      let fac = this.getCheapeastAugFaction()
+      if (fac == null) {
+         return null
+      }
 
       return this.getCheapeastAugFaction().getCheapeastAug()
 
@@ -105,7 +113,7 @@ export class FactionsManager {
 
          try {
             if (!faction.isCityFaction() && !faction.isJoined()) {
-               faction.joinFaction()
+               faction.join()
             }
          } catch (e) {
             this.ns.tprint(e)
@@ -150,7 +158,7 @@ export class FactionsManager {
             execSomewhere(this.ns, "factions/workers/traveller.js", 1, nextCityFaction.factionName)
          }
 
-         nextCityFaction.joinFaction()
+         nextCityFaction.join()
       }
 
       let workFor = this.getNextFactionToWorkFor()
@@ -199,19 +207,21 @@ export class FactionsManager {
          timeToAffordNextAug = Infinity
       }
 
-      let cheapestAugFaction = this.getCheapeastAugFaction()
-      let timeToRepNextReset = cheapestAugFaction.getTimeToNextAug(cheapestAugFaction.getFavorNextReset(), true)
       let nextResetFavor = false
-
-      if (cheapestAugFaction.getFavor() < CONSTANTS.BaseFavorToDonate) {
-         if (cheapestAugFaction.getFavorNextReset() >= CONSTANTS.BaseFavorToDonate) {
-
-            if ((timeToFirstAug / 2) < timeToRepNextReset) {
-
+      let cheapestAugFaction = this.getCheapeastAugFaction()
+      let timeToRepNextReset = Infinity
+      if (cheapestAugFaction != null) {
+         timeToRepNextReset = cheapestAugFaction.getTimeToNextAug(cheapestAugFaction.getFavorNextReset(), true)
+         if (cheapestAugFaction.getFavor() < CONSTANTS.BaseFavorToDonate) {
+            if (cheapestAugFaction.getFavorNextReset() >= CONSTANTS.BaseFavorToDonate) {
                nextResetFavor = true
             }
          }
+
       }
+
+
+
 
       //Reset if we can't afford the new aug, or if it take less time to reset and gain the rep than to afford the aug, or if we can now donate to the faction
       if ((this.getNonInstalledAugCount() > 0 && ((timeToFirstAug / 2) < timeToAffordNextAug || lastReset == -1 || timeToRepNextReset < timeToAffordNextAug)) || nextResetFavor) {
@@ -228,12 +238,24 @@ export class FactionsManager {
          execSomewhere(this.ns, "factions/workers/purchaseNeuroflux.js", 1, highestRep.factionName);
       }
       this.ns.write("/data/lastInstall.txt", Date.now(), "w")
-      execSomewhere(this.ns, "factions/workers/installAugs.js");
+
+
+      if (this.getNonInstalledAugCount() > 0) {
+
+         execSomewhere(this.ns, "factions/workers/installAugs.js");
+      } else {
+         execSomewhere(this.ns, "factions/workers/softReset.js");
+      }
    }
 
 }
 
-
+/** @param {NS} ns */
+export async function main(ns) {
+   ns.disableLog("scan")
+   let fm = new FactionsManager(ns)
+   fm.loop();
+}
 
 
 

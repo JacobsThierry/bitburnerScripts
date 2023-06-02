@@ -26,7 +26,10 @@ export class Faction {
       /** @type {string} */
       this.factionName = factionName
 
-      let aug = ns.singularity.getAugmentationsFromFaction(factionName)
+      //TODO : make a file will augs from every faction and read that file instead in order to save ram:
+      //let aug = ns.singularity.getAugmentationsFromFaction(factionName)
+
+      let aug = JSON.parse(ns.read("/data/getAugmentationsFromFaction.txt"))[factionName]
 
       this.augmentations = []
 
@@ -46,7 +49,7 @@ export class Faction {
       return Faction.cityFactions.includes(this.factionName)
    }
 
-   joinFaction() {
+   join() {
       //let joined = this.ns.singularity.joinFaction(this.factionName)
 
       if (this.isJoined()) {
@@ -78,11 +81,11 @@ export class Faction {
          return null
       }
    }
-
-   isUnlocked() {
-      return this.ns.getPlayer().factions.includes(this.factionName) || this.ns.singularity.checkFactionInvitations().includes(this.factionName)
-   }
-
+   /*
+      isUnlocked() {
+         return this.ns.getPlayer().factions.includes(this.factionName) || this.ns.singularity.checkFactionInvitations().includes(this.factionName)
+      }
+   */
    getCheapeastAug() {
       let a = this.getAugsRemaining()
 
@@ -129,9 +132,10 @@ export class Faction {
 
       workType.sort((a, b) => calculateFactionRep(this.ns, this.ns.getPlayer(), a) - calculateFactionRep(this.ns, this.ns.getPlayer(), b))
 
-      for (let i = 0; i < workType.length; i++) {
-         this.ns.singularity.workForFaction(this.factionName, workType[i], focus)
-      }
+
+      //this.ns.singularity.workForFaction(this.factionName, workType[i], focus)
+      execSomewhere(ns, "/factions/workers/workForFaction.js", 1, this.factionName, workType, focus)
+
    }
 
    isJoined() {
@@ -164,7 +168,9 @@ export class Faction {
          return false
       }
 
-      return this.ns.singularity.donateToFaction(this.factionName, amt)
+      //return this.ns.singularity.donateToFaction(this.factionName, amt)
+
+      this.ns.execSomewhere(this.ns, "/factions/workers/donate.js", 1, this.factionName, amt)
    }
 
 }

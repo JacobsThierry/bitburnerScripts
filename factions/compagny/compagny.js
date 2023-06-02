@@ -31,9 +31,13 @@ export class Compagny {
 
    workForCompagny() {
 
-      this.ns.singularity.applyToCompany(this.compagnyName, "IT")
+      try {
+         this.ns.singularity.applyToCompany(this.compagnyName, "IT")
 
-      return this.ns.singularity.workForCompany(this.compagnyName, true)
+         return this.ns.singularity.workForCompany(this.compagnyName, true)
+      } catch {
+         return false
+      }
    }
 
    getRep() {
