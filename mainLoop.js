@@ -54,31 +54,48 @@ export class Main {
 
       if (this.clock == 0) {
          openAllPorts(this.ns);
-         serverManagerLoop(this.ns);
          execSomewhere(this.ns, "codingContracts/solveContracts.js")
 
       }
 
-      //The compagny manager can cancel the faction work and the programs can cancel the compagny manager   
-      if (this.clock == 50) {
-         this.ns.exec("factions/factionManager.js", "home")
-      }
-      if (this.clock == 100) {
-         this.ns.exec("factions/compagny/compagnyManager.js", "home")
-      }
-      if (this.clock == 200) {
-         this.ns.exec("/programs/buyTor.js", "home")
+      if (this.clock == 20) {
+         if (this.ns.getServerMoneyAvailable("home") > 21e4 && this.ns.getServerMoneyAvailable("home") < 32e6) { //30e6 is the price of relaySMTP
+            execSomewhere(this.ns, "exploits/casino/coinFlip/findSeed.js")
+            this.clock = 401 //skip the part that can unfocus the casino. Next clock is bigger so that we have time to make some money
+         }
       }
 
-      if (this.clock == 250) {
+
+
+
+      //The compagny manager can cancel the faction work and the programs can cancel the compagny manager   
+      if (this.clock == 100) {
+         this.ns.exec("factions/factionManager.js", "home")
+      }
+      if (this.clock == 200) {
+         this.ns.exec("factions/compagny/compagnyManager.js", "home")
+      }
+      if (this.clock == 300) {
          execSomewhere(this.ns, "servers/backDoorer.js")
       }
 
+      if (this.clock == 400) {
+         this.ns.exec("/programs/buyTor.js", "home")
+      }
+
+
+      if (this.clock == 1000) {
+         serverManagerLoop(this.ns);
+      }
 
 
 
 
-      if (this.clock == 900) {
+
+
+
+
+      if (this.clock == 4500) {
          this.writeRevenues()
       }
 
