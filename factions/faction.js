@@ -63,6 +63,7 @@ export class Faction {
 
    getAugsRemaining() {
       let augsRemaining = this.augmentations.filter(a => (!a.isOwned()))
+      augsRemaining.sort((a, b) => a.getReputationReq() - b.getReputationReq())
       return augsRemaining
    }
 
@@ -132,9 +133,8 @@ export class Faction {
 
       workType.sort((a, b) => calculateFactionRep(this.ns, this.ns.getPlayer(), a) - calculateFactionRep(this.ns, this.ns.getPlayer(), b))
 
-
       //this.ns.singularity.workForFaction(this.factionName, workType[i], focus)
-      execSomewhere(ns, "/factions/workers/workForFaction.js", 1, this.factionName, workType, focus)
+      execSomewhere(this.ns, "/factions/workers/workForFaction.js", 1, this.factionName, JSON.stringify(workType), focus)
 
    }
 

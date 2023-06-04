@@ -10,11 +10,16 @@ import * as fas from "servers/findAllServers"
 import { getPathToServer } from "servers/getPathToServer"
 import { calculatePercentMoneyHacked } from "Formulas/calculatePercentMoneyHacked"
 import { getRepFromDonation } from "factions/factionsFormulas"
+import { calculateGrowTime } from "Formulas/calculateGrowTime"
+import { calculateHackingTime } from "Formulas/calculateHackingTime"
 
 /** @param {NS} ns */
 export async function main(ns) {
    ns.tail()
    ns.disableLog("ALL")
+
+   //ns.tprint(ns.tFormat(calculateHackingTime(ns.getServer("n00dles"), ns.getPlayer())))
+
    /*
    ns.print(rm.getTotalRamAvailable(ns))
 

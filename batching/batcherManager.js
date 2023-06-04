@@ -85,7 +85,7 @@ export class BatcherManager {
 
          let bat = this.batchers[i]
          bat.loop()
-         //bat.compareThreadCount2()
+         //bat.compareTrueThreadCount()
       }
    }
 

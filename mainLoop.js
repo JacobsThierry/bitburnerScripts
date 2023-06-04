@@ -58,21 +58,19 @@ export class Main {
          execSomewhere(this.ns, "codingContracts/solveContracts.js")
 
       }
-      if (this.clock == 50) {
-         execSomewhere(this.ns, "programs/buyTor.js")
-      }
 
-      if (this.clock == 100) {
-         //execSomewhere(this.ns, "factions/factionManager.js")
-         //this.ns.exec("factions/factionManager.js", "home")
+      //The compagny manager can cancel the faction work and the programs can cancel the compagny manager   
+      if (this.clock == 50) {
          this.ns.exec("factions/factionManager.js", "home")
+      }
+      if (this.clock == 100) {
+         this.ns.exec("factions/compagny/compagnyManager.js", "home")
+      }
+      if (this.clock == 150) {
+         this.ns.exec("/programs/buyTor.js", "home")
       }
 
       if (this.clock == 200) {
-         this.ns.exec("factions/compagny/compagnyManager.js", "home")
-      }
-
-      if (this.clock == 300) {
          execSomewhere(this.ns, "servers/backDoorer.js")
       }
 
@@ -87,7 +85,9 @@ export class Main {
 
       this.manager.loop()
       display(this.ns, this.manager)
-      this.clock = (this.clock + 1) % 1000
+
+      //10000 =~ 1m 10s
+      this.clock = (this.clock + 1) % 5000
    }
 
 }
@@ -99,7 +99,7 @@ export async function main(ns) {
    while (true) {
 
       m.loop()
-      await ns.sleep(5);
+      await ns.sleep(1);
    }
 }
 

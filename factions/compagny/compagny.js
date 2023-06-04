@@ -30,10 +30,8 @@ export class Compagny {
 
 
    workForCompagny() {
-
       try {
-         this.ns.singularity.applyToCompany(this.compagnyName, "IT")
-
+         this.ns.singularity.applyToCompany(this.compagnyName, "IT") //TODO : find best job
          return this.ns.singularity.workForCompany(this.compagnyName, true)
       } catch {
          return false

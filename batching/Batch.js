@@ -165,7 +165,7 @@ export class Batch {
          if (gok == 0) {
             this.ns.print("All grow threads with the id ", this.id, " have been started")
          } else {
-            //this.ns.tprint("Not all grow threads with the id ", this.id, " have been started")
+            this.ns.print("Not all grow threads with the id ", this.id, " have been started")
          }
          this.growStarted = true;
       }
@@ -326,13 +326,13 @@ export class Batcher {
       let timeWithoutHack = calculateWeakenTime(serv, p) - calculateHackingTime(serv, p)
 
       //number of period without hacking per batch
-      let periodWithoutHack = timeWithoutHack / this.getPeriod()
+      let periodWithoutHack = timeWithoutHack / calculateWeakenTime(serv, p)  //this.getPeriod()
 
       //this.ns.tprint("Period without hack : ", periodWithoutHack)
 
       //same for grow
       let timeWithoutGrow = calculateWeakenTime(serv, p) - calculateGrowTime(serv, p)
-      let periodWithoutGrow = timeWithoutGrow / this.getPeriod()
+      let periodWithoutGrow = timeWithoutGrow / calculateWeakenTime(serv, p)  //this.getPeriod()
 
       let res = Math.ceil(totalThread - (periodWithoutHack * ht - periodWithoutGrow * gt))
 
@@ -349,7 +349,7 @@ export class Batcher {
 
          let threadRunning = this.batches.reduce((acc, current) => acc + current.threadsRunning(), 0)
 
-         let calculatedValue = this.trueThreadCount()
+         let calculatedValue = this.trueThreadsCount()
          this.ns.tprint("Thread running = ", threadRunning, " calculated value = ", calculatedValue, ". Diff = ", calculatedValue - threadRunning)
       }
    }

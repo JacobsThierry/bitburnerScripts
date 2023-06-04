@@ -55,15 +55,25 @@ export class FactionsManager {
       joinedFactions = joinedFactions.filter(f => f.getAugsRemainingCount() > 0)
       joinedFactions = joinedFactions.filter(f => f.getTimeToNextAug() > 0)
       joinedFactions = joinedFactions.sort((a, b) => a.getTimeToNextAug() - b.getTimeToNextAug())
+
+
+
+
+
       let joinedFactionsWithoutFavor = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < CONSTANTS.BaseFavorToDonate))
+
+      //Factions were we haven't unlocked the first aug first
+      // This line might be broken, idk
+      joinedFactionsWithoutFavor = joinedFactionsWithoutFavor.sort((a, b) => (((b.getAugsRemaining()[0].getReputationReq() - b.getRep()) > 0 ? 1 : 0) - ((a.getAugsRemaining()[0].getReputationReq() - a.getRep()) > 0 ? 1 : 0)))
+
+      let joinedFactions2 = joinedFactionsWithoutFavor.filter(f => f.getAugsRemaining()[0].getReputationReq() > f.getRep())
+
       /*
-            if (joinedFactionsWithoutFavor.length == 0 || joinedFactionsWithoutFavor[0] == null) {
-               return joinedFactions[0]
-            }
+      Wright the filtered version and return the non filtered one, so that we will work for a compagny when we can't afford the next aug
+      but we will work for a faction when we can't be employed.
+      This could also be solved by checking player.skill.hacking 
       */
-
-
-      this.ns.write("/data/joinedFactionsWithoutFavor.txt", JSON.stringify(joinedFactionsWithoutFavor), "w")
+      this.ns.write("/data/joinedFactionsWithoutFavor.txt", JSON.stringify(joinedFactions2.toString()), "w")
 
       return joinedFactionsWithoutFavor[0]
    }
