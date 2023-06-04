@@ -58,8 +58,6 @@ export class FactionsManager {
 
 
 
-
-
       let joinedFactionsWithoutFavor = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < CONSTANTS.BaseFavorToDonate))
 
       //Factions were we haven't unlocked the first aug first

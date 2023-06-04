@@ -66,11 +66,11 @@ export class Main {
       if (this.clock == 100) {
          this.ns.exec("factions/compagny/compagnyManager.js", "home")
       }
-      if (this.clock == 150) {
+      if (this.clock == 200) {
          this.ns.exec("/programs/buyTor.js", "home")
       }
 
-      if (this.clock == 200) {
+      if (this.clock == 250) {
          execSomewhere(this.ns, "servers/backDoorer.js")
       }
 

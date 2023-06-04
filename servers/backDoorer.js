@@ -19,7 +19,7 @@ export async function backDoorAll(ns) {
    for (let i = 0; i < servers.length; i++) {
       let serv = servers[i]
 
-      if (!ns.getServer(serv).hasAdminRights || ((serv == "w0rld_d43m0n")) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServerRequiredHackingLevel(serv) > ns.getPlayer().skills.hacking) {
+      if (!ns.getServer(serv).hasAdminRights || ((serv == "w0rld_d43m0n")) || ns.getServer(serv).backdoorInstalled || serv == "darkweb" || ns.getServer(serv).requiredHackingSkill > ns.getPlayer().skills.hacking) {
          continue
       }
 
