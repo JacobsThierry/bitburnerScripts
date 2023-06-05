@@ -59,9 +59,19 @@ export class Main {
       }
 
       if (this.clock == 20) {
-         if (this.ns.getServerMoneyAvailable("home") > 21e4 && this.ns.getServerMoneyAvailable("home") < 32e6) { //30e6 is the price of relaySMTP
-            execSomewhere(this.ns, "exploits/casino/coinFlip/findSeed.js")
-            this.clock = 401 //skip the part that can unfocus the casino. Next clock is bigger so that we have time to make some money
+         if (this.ns.getServerMoneyAvailable("home") > 21e4 && this.ns.getServerMoneyAvailable("home") < 20e9) {
+            //execSomewhere(this.ns, "exploits/casino/roulette/roulette.js")
+
+            if (this.ns.read("/data/casino/kickedFromRoulette.txt") == "false") {
+               this.ns.exec("exploits/casino/roulette/roulette.js", "home")
+               this.clock = 401 //skip the part that can unfocus the casino. Next clock is bigger so that we have time to make some money
+            }
+            /*
+                        if (this.ns.getServerMoneyAvailable("home") < 5e6) {
+                           execSomewhere(this.ns, "exploits/casino/coinFlip/coinFlip.js")
+                           this.clock = 401
+                        }
+            */
          }
       }
 

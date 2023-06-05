@@ -14,6 +14,7 @@ export async function main(ns) {
 
    maxTry = 500
 
+   ns.write("/data/casino/kickedFromRoulette.txt", "false", "w")
 
    while (ns.exec("resets/writeResetInfo.js", "home") == 0 && maxTry-- > 0) {
       await ns.sleep(100)
