@@ -53,12 +53,12 @@ export class FactionsManager {
    getNextFactionToWorkFor() {
       let joinedFactions = this.getJoinedFactions()
       joinedFactions = joinedFactions.filter(f => f.getAugsRemainingCount() > 0)
-      joinedFactions = joinedFactions.filter(f => f.getTimeToNextAug() > 0)
+      //joinedFactions = joinedFactions.filter(f => f.getTimeToNextAug() > 0)
       joinedFactions = joinedFactions.sort((a, b) => a.getTimeToNextAug() - b.getTimeToNextAug())
 
 
 
-      let joinedFactionsWithoutFavor = joinedFactions.filter(f => (f.getFavor() + f.getFavorGain() < CONSTANTS.BaseFavorToDonate))
+      let joinedFactionsWithoutFavor = joinedFactions.filter(f => ((f.getFavor() + f.getFavorGain()) < CONSTANTS.BaseFavorToDonate))
 
       //Factions were we haven't unlocked the first aug first
       // This line might be broken, idk
@@ -74,6 +74,13 @@ export class FactionsManager {
       this.ns.write("/data/joinedFactionsWithoutFavor.txt", JSON.stringify(joinedFactions2.toString()), "w")
 
       return joinedFactionsWithoutFavor[0]
+   }
+
+   isInACityFaction() {
+      let cityFactionsNames = Faction.cityFactions
+
+      return cityFactionsNames.some((v) => this.ns.getPlayer().factions.includes(v))
+
    }
 
    getCheapeastAugFaction() {
@@ -163,7 +170,9 @@ export class FactionsManager {
       if (nextCityFaction != null) {
 
          if (this.ns.getPlayer().city != nextCityFaction.factionName && this.ns.getServerMoneyAvailable("home") > 15e6) {
-            execSomewhere(this.ns, "factions/workers/traveller.js", 1, nextCityFaction.factionName)
+            if (!this.isInACityFaction()) {
+               execSomewhere(this.ns, "factions/workers/traveller.js", 1, nextCityFaction.factionName)
+            }
          }
 
          nextCityFaction.join()
@@ -220,9 +229,14 @@ export class FactionsManager {
       let timeToRepNextReset = Infinity
       if (cheapestAugFaction != null) {
          timeToRepNextReset = cheapestAugFaction.getTimeToNextAug(cheapestAugFaction.getFavorNextReset(), true)
+
+         //reset if we unlock donation
          if (cheapestAugFaction.getFavor() < CONSTANTS.BaseFavorToDonate) {
-            if (cheapestAugFaction.getFavorNextReset() >= CONSTANTS.BaseFavorToDonate) {
-               nextResetFavor = true
+            if (cheapestAugFaction.getFavorNextReset() > CONSTANTS.BaseFavorToDonate) {
+               if (cheapestAugFaction.getFavorNextReset() - cheapestAugFaction.getFavor() > 10) { // To prevent endless reset
+                  this.ns.write("/data/resetFavorFaction.txt", JSON.stringify({ "faction": cheapestAugFaction.factionName, "fav": cheapestAugFaction.getFavor(), "nextResetFavor": cheapestAugFaction.getFavorNextReset() }) + "\n", "a")
+                  nextResetFavor = true
+               }
             }
          }
 

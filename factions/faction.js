@@ -1,7 +1,7 @@
 import { calculateIntelligenceBonus } from "Formulas/calculateIntelligenceBonus";
 import { CONSTANTS } from "Formulas/constant";
 import { Augmentation } from "factions/augmentation";
-import { FactionWorkType, calculateFactionRep, getHackingWorkRepGain, repToFavor } from "factions/factionsFormulas";
+import { FactionWorkType, calculateFactionRep, favorToRep, getHackingWorkRepGain, repToFavor } from "factions/factionsFormulas";
 import { execSomewhere } from "servers/ramManager";
 
 
@@ -154,12 +154,20 @@ export class Faction {
    }
 
    getFavorGain() {
-      let rep = this.getRep()
-      return repToFavor(rep)
+      if (!this.isJoined()) {
+         return 0
+      }
+      if (this.favor == null) {
+         this.favor = 0;
+      }
+      const storedRep = Math.max(0, favorToRep(this.getFavor()))
+      const totalRep = storedRep + this.getRep();
+      const newFavor = repToFavor(totalRep)
+      return newFavor - this.favor;
    }
 
    getFavorNextReset() {
-      return this.getFavor() + this.getFavorGain()
+      return (this.getFavor() + this.getFavorGain())
    }
 
    donate(amt) {
@@ -169,8 +177,7 @@ export class Faction {
       }
 
       //return this.ns.singularity.donateToFaction(this.factionName, amt)
-
-      this.ns.execSomewhere(this.ns, "/factions/workers/donate.js", 1, this.factionName, amt)
+      execSomewhere(this.ns, "/factions/workers/donate.js", 1, this.factionName, amt)
    }
 
 }

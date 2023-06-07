@@ -3,6 +3,9 @@
 /** @param {NS} ns */
 export async function main(ns) {
 
+   let ev = new KeyboardEvent('keydown', { 'key': 'Escape', "charCode": 27, "code": "Escape" })
+   eval("document").dispatchEvent(ev)
+
    ns.print("Trying to exec copy hacking")
    let maxTry = 500
 

@@ -59,7 +59,7 @@ export class Main {
       }
 
       if (this.clock == 20) {
-         if (this.ns.getServerMoneyAvailable("home") > 21e4 && this.ns.getServerMoneyAvailable("home") < 20e9) {
+         if (this.ns.getServerMoneyAvailable("home") > (((this.ns.getPlayer().city == "Aevum") ? 0 : 200000) + 5e3) && this.ns.getServerMoneyAvailable("home") < 20e9) {
             //execSomewhere(this.ns, "exploits/casino/roulette/roulette.js")
 
             if (this.ns.read("/data/casino/kickedFromRoulette.txt") == "false") {
@@ -82,19 +82,20 @@ export class Main {
       if (this.clock == 100) {
          this.ns.exec("factions/factionManager.js", "home")
       }
-      if (this.clock == 200) {
-         this.ns.exec("factions/compagny/compagnyManager.js", "home")
-      }
-      if (this.clock == 300) {
+
+      if (this.clock == 250) {
          execSomewhere(this.ns, "servers/backDoorer.js")
       }
 
-      if (this.clock == 400) {
+      if (this.clock == 300) {
+         this.ns.exec("factions/compagny/compagnyManager.js", "home")
+      }
+
+      if (this.clock == 350) {
          this.ns.exec("/programs/buyTor.js", "home")
       }
 
-
-      if (this.clock == 1000) {
+      if (this.clock == 400) {
          serverManagerLoop(this.ns);
       }
 
@@ -114,13 +115,16 @@ export class Main {
       display(this.ns, this.manager)
 
       //10000 =~ 1m 10s
-      this.clock = (this.clock + 1) % 5000
+      this.clock = (this.clock + 1) % 10000
    }
 
 }
 
 /** @param {NS} ns */
 export async function main(ns) {
+
+   ns.tail()
+
 
    let m = new Main(ns)
    while (true) {

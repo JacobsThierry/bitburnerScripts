@@ -64,15 +64,17 @@ export class BatcherManager {
                //Filtering the server that are alredy hacked
                bestServers = bestServers.filter(serv => !(this.batchers.some(batcher => batcher.server.trim() == serv[0].server.trim())))
 
-               let b = bestServers[0][0]
-               b = optimizeBatch(this.ns, b, totalThreadsAvailable);
+               try {
+                  let b = bestServers[0][0]
+                  b = optimizeBatch(this.ns, b, totalThreadsAvailable);
 
-               let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
+                  let { ht, wt1, gt, wt2 } = b.getThreadsPerCycle();
 
-               if (ht > 0 && b.trueThreadsCount() != NaN) {
-                  this.batchers.push(b)
-                  added = true
-               }
+                  if (ht > 0 && b.trueThreadsCount() != NaN) {
+                     this.batchers.push(b)
+                     added = true
+                  }
+               } catch { }
             }
          }
       }
