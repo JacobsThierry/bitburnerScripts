@@ -33,9 +33,9 @@ export function optimizeBatch(ns, batcher, maxThreads = -1) {
    let clock = 0;
    while (batcher.trueThreadsCount() > maxThreads && maxloop-- > 0) {
       if (clock == 0) {
-         batcher.percentStolen *= 0.9;
+         batcher.percentStolen *= 0.8;
       } else {
-         batcher.t0 = batcher.t0 + 100;
+         batcher.t0 = batcher.t0 + 150;
       }
 
       let { ht, wt1, gt, wt2 } = batcher.getThreadsPerCycle();

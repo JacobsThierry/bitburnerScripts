@@ -157,13 +157,11 @@ export class Faction {
       if (!this.isJoined()) {
          return 0
       }
-      if (this.favor == null) {
-         this.favor = 0;
-      }
+
       const storedRep = Math.max(0, favorToRep(this.getFavor()))
       const totalRep = storedRep + this.getRep();
       const newFavor = repToFavor(totalRep)
-      return newFavor - this.favor;
+      return newFavor - this.getFavor();
    }
 
    getFavorNextReset() {

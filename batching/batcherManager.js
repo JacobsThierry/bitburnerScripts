@@ -41,12 +41,14 @@ export class BatcherManager {
                break opt;
             }
 
+            totalThreadsAvailable = this.getTotalThreadsAvailable()
+
             let batcher = this.batchers[i]
             let batcherOpt = optimizeBatch(this.ns, batcher, totalThreadsAvailable + batcher.trueThreadsCount())
 
 
-            totalThreadsAvailable += batcher.trueThreadsCount()
-            totalThreadsAvailable -= batcherOpt.trueThreadsCount()
+            /*totalThreadsAvailable += batcher.trueThreadsCount()
+            totalThreadsAvailable -= batcherOpt.trueThreadsCount()*/
             this.batchers[i] = batcherOpt;
 
 

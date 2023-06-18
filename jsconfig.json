@@ -1,5 +1,8 @@
 {
    "compilerOptions": {
       "baseUrl": "."
+   },
+   "compilerOptions": {
+      "target": "ES2022"
    }
 }

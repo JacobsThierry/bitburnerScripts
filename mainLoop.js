@@ -8,6 +8,7 @@ import { optimizeBatch, findBestServers, isMaxed } from "batching/batchOptimizer
 
 import { openAllPorts } from "servers/portOpener"
 import { BatcherManager } from "batching/batcherManager"
+import { serverResetter } from "hackingFunctions/serverResetter";
 
 
 export class Main {
@@ -76,8 +77,6 @@ export class Main {
       }
 
 
-
-
       //The compagny manager can cancel the faction work and the programs can cancel the compagny manager   
       if (this.clock == 100) {
          this.ns.exec("factions/factionManager.js", "home")
@@ -99,21 +98,15 @@ export class Main {
          serverManagerLoop(this.ns);
       }
 
-
-
-
-
-
-
-
       if (this.clock == 4500) {
          this.writeRevenues()
       }
 
 
       this.manager.loop()
-      display(this.ns, this.manager)
-
+      try {
+         display(this.ns, this.manager)
+      } catch { }
       //10000 =~ 1m 10s
       this.clock = (this.clock + 1) % 10000
    }
@@ -143,17 +136,92 @@ export async function main(ns) {
  * @returns {any}
  */
 function display(ns, manager) {
+   /*
+┌───────────────────┬───────────────────┐
+│  sigma-cosmetics  │ sigma-cosmetics   │
+├───────────────────┼───────────────────┤
+│ T0 = 0.xxx        │T0 = 0.xxx         │
+│ Percent = 0.xx    │Percent = 0.xx     │
+│ Depth   = xxx     │Depth   = xxx      │
+│ State   = x/5     │State   = x/5      │
+│ cur depth/threads │cur depth/threads  │
+│                   │                   │
+│ Rev     = xxx     │Rev     = xxx      │
+│ Threads = xxxxx   │Threads = xxxxx    │
+└───────────────────┴───────────────────┘
+   */
+
    let str = "\n"
+   let tableWidth = 19
+   let lines = []
+
+
+
    for (let i = 0; i < manager.batchers.length; i++) {
-      str += (manager.batchers[i].toString())
+
+      let tab = []
+      let b = manager.batchers[i]
+
+      tab.push(b.server)
+      tab.push("T0 = " + parseFloat(b.t0.toFixed(3)))
+      tab.push("Percent = " + parseFloat(b.percentStolen.toFixed(3)))
+      tab.push("Depth = " + b.getDepth())
+      tab.push(("State = " + (b.serverResetter.isDone() ? "Started" : (b.serverResetter.state + "/4"))))
+
+      if (b.serverResetter.isDone()) {
+         tab.push("Curr depth = " + b.batches.length)
+      } else {
+         if (b.serverResetter.state == 4) {
+            let t = b.serverResetter.waitTime
+            let seconds = t / 1000;
+            let minutes = parseInt(seconds / 60);
+            seconds = seconds % 60;
+
+            //tab.push("T rem = " + minutes.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0'))
+            tab.push("")
+         } else {
+            tab.push("T rem = " + (Math.max(0, b.serverResetter.gthread) + Math.max(0, b.serverResetter.weakenThread)))
+         }
+      }
+
+      tab.push("Rev = " + ns.formatNumber(b.getRevenues()))
+      tab.push("Threads = " + b.threadsCount())
+
+      lines.push(tab)
+
+      if (lines.length == 2) {
+         str += "┌───────────────────┬───────────────────┐\n"
+         str += "│" + lines[0][0] + " ".repeat(tableWidth - lines[0][0].length) + "│" + lines[1][0] + " ".repeat(tableWidth - lines[1][0].length) + "│\n"
+         str += "├───────────────────┼───────────────────┤\n"
+
+         for (let i = 1; i < lines[0].length; i++) {
+            str += "│" + lines[0][i] + " ".repeat(tableWidth - lines[0][i].length) + "│" + lines[1][i] + " ".repeat(tableWidth - lines[1][i].length) + "│\n"
+         }
+
+         str += "└───────────────────┴───────────────────┘\n"
+         lines = []
+      }
    }
+
+   if (lines.length == 1) {
+      str += "┌───────────────────┐\n"
+      str += "│" + lines[0][0] + " ".repeat(tableWidth - lines[0][0].length) + "│\n"
+      str += "├───────────────────┤\n"
+
+      for (let i = 1; i < lines[0].length; i++) {
+         str += "│" + lines[0][i] + " ".repeat(tableWidth - lines[0][i].length) + "│\n"
+      }
+      str += "└───────────────────┘\n"
+
+   }
+
+   ns.clearLog()
 
    str += "\n=============================================";
    str += "\nMax thread : " + getMaximumInstanceOfScript(ns, "/hackingFunctions/grow_delay.js", true)
    str += "\nThreads available : " + manager.getTotalThreadsAvailable();
-
-   ns.clearLog()
    ns.print(str)
+
 
 }
 

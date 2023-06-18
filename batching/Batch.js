@@ -18,12 +18,12 @@ export class Batch {
    /**
     * Description
     * @param {NS} ns
-    * @param {any} server
+    * @param {string} server
     * @param {any} hdelay
     * @param {any} w1delay
     * @param {any} gdelay
     * @param {any} w2delay
-    * @param {any} t0
+    * @param {number} t0
     * @param {any} hthread
     * @param {any} w1thread
     * @param {any} gthread

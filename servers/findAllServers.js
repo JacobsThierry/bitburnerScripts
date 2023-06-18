@@ -54,7 +54,7 @@ export function findAllRootServers(ns) {
             servers.push(host)
          }
 
-         if (!out.includes(host) && ns.hasRootAccess(host)) {
+         if (!out.includes(host) && ns.getServer(host).hasAdminRights) {
             out.push(host)
          }
 

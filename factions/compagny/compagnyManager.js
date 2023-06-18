@@ -65,8 +65,9 @@ export class CompagnyManager {
 
 
       if (this.canWork()) {
-
-         this.compagnyToWorkFor()[0].workForCompagny()
+         if (this.compagnyToWorkFor().length > 0) {
+            this.compagnyToWorkFor()[0].workForCompagny()
+         }
       }
    }
 
