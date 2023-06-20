@@ -29,6 +29,10 @@ export class Division {
       this.officeTargetLevel = 3;
 
 
+      this.cityQueue = citiesList
+
+
+
    }
 
 
@@ -46,6 +50,7 @@ export class Division {
             d.upgradeOffice(officeUpgradeAmt)
          }
 
+         this.sellProducts("MP")
          d.tick()
 
       }
@@ -53,11 +58,37 @@ export class Division {
 
    }
 
+   assignEmployees(nbOperation, nbEngineer, nbBusiness, nbManagement, nbRD, nbIntern) {
+      Object.values(this.citiesDivisions).forEach(d => {
+         d.assignEmployees(nbOperation, nbEngineer, nbBusiness, nbManagement, nbRD, nbIntern)
+      })
+   }
+
+   enableSmartSupply() {
+      Object.values(this.citiesDivisions).forEach(d => {
+         d.enableSmartSupply()
+      })
+
+   }
+
+   disableSmartSupply() {
+      Object.values(this.citiesDivisions).forEach(d => {
+         d.disableSmartSupply()
+      })
+   }
+
+   setSmartSupply(bool) {
+      Object.values(this.citiesDivisions).forEach(d => {
+         d.setSmartSupply(true)
+      })
+   }
+
    expand(city) {
       let division = this.ns.corporation.getDivision(this.divisionName)
       //If the division alredy exists, we don't create it
       if (!division.cities.includes(city)) {
          this.ns.corporation.expandCity(this.divisionName, city)
+         this.ns.corporation.purchaseWarehouse(this.divisionName, city)
       }
 
       division = this.ns.corporation.getDivision(this.divisionName)
@@ -68,7 +99,7 @@ export class Division {
             this.citiesDivisions[city] = new CityDivision(this.ns, this.divisionName, city, this.industryType)
          }
 
-         this.citiesDivisions[city].sellProducedMaterial()
+         //this.citiesDivisions[city].sellProducedMaterial()
       }
 
    }
@@ -95,14 +126,13 @@ export class Division {
       }
    }
 
-   sellProducedMaterial(price = "MP") {
-      Object.values(this.citiesDivisions).forEach(d => { d.sellProducedMaterial(price) })
+
+   sellProducts(price = "MP") {
+      Object.values(this.citiesDivisions).forEach(d => { d.sellProducts(price) })
    }
 
-
-
-   stopSellingProducedMaterial() {
-      Object.values(this.citiesDivisions).forEach(d => { d.stopSellingProducedMaterial() })
+   stopSellingProduct() {
+      Object.values(this.citiesDivisions).forEach(d => { d.stopSellingProducts() })
    }
 
    buyMaterialInEachCity(materialName, qte) {
@@ -115,11 +145,39 @@ export class Division {
 
    getAvgMaterialGoal(materialName) {
       let average = Object.values(this.citiesDivisions).reduce((total, next) => { total + next.material[materialName].quantityGoal }, 0) / Object.values(this.citiesDivisions).length
+      if (isNaN(average)) {
+         average = 0
+      }
       return average
    }
 
    getAdvertlevel() {
       return this.ns.corporation.getDivision(this.divisionName).numAdVerts
+   }
+
+   createProduct(design, market) {
+      let products = this.ns.corporation.getDivision(this.divisionName).products
+      if (products.length > 3) {
+         this.ns.corporation.discontinueProduct(this.divisionName, products[0])
+      }
+
+      /*
+      let city = this.cityQueue.shift()
+      this.cityQueue.push(city)
+      this.citiesDivisions[city].createProduct(design, market)
+      */
+
+      Object.values(this.citiesDivisions)[0].createProduct(design, market)
+   }
+
+   getProducts() {
+      return this.ns.corporation.getDivision(this.divisionName).products
+   }
+
+
+   getInDesignProducts() {
+
+      return this.ns.corporation.getDivision(this.divisionName).products.filter(p => { this.ns.corporation.getProduct(this.divisionName, "Aevum", p).developmentProgress < 100 })
    }
 
 }

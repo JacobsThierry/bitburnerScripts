@@ -9,13 +9,20 @@ export class CorporationMain {
     */
    constructor(ns) {
       this.ns = ns
+
+      if (!this.ns.corporation.hasCorporation()) {
+
+         this.ns.corporation.createCorporation("PapoursCorp", false)
+         this.ns.corporation.createCorporation("PapoursCorp", true)
+      }
       this.corporation = new Corporation(ns)
 
    }
 
    loop() {
 
-      if (ns.corporation.getCorporation() == null) {
+      if (!this.ns.corporation.hasCorporation()) {
+
          this.ns.corporation.createCorporation("PapoursCorp", false)
          this.ns.corporation.createCorporation("PapoursCorp", true)
       } else {
@@ -28,7 +35,7 @@ export class CorporationMain {
 /** @param {NS} ns */
 export async function main(ns) {
 
-
+   ns.disableLog("sleep")
 
    let corpLoop = new CorporationMain(ns)
 

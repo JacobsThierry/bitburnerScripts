@@ -4,7 +4,10 @@
 export async function main(ns) {
 
    try {
-      ns.singularity.upgradeHomeRam()
+      for (let i = 0; i < 10; i++) {
+         ns.singularity.upgradeHomeRam()
+      }
+
    } catch { }
 
 }

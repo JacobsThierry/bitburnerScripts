@@ -18,6 +18,10 @@ export async function main(ns) {
    ns.tail()
    ns.disableLog("ALL")
 
+   ns.print(ns.corporation.getDivision("Papours's crops").productionMult)
+
+   //ns.print(ns.corporation.getDivision("Papours's crops").productionMult)
+
    //ns.tprint(ns.tFormat(calculateHackingTime(ns.getServer("n00dles"), ns.getPlayer())))
 
    /*
