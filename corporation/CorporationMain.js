@@ -27,6 +27,7 @@ export class CorporationMain {
          this.ns.corporation.createCorporation("PapoursCorp", true)
       } else {
          this.corporation.tick()
+
       }
    }
 
@@ -36,7 +37,6 @@ export class CorporationMain {
 export async function main(ns) {
 
    ns.disableLog("sleep")
-
    let corpLoop = new CorporationMain(ns)
 
    while (true) {

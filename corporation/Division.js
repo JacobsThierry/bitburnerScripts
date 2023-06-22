@@ -10,7 +10,7 @@ export class Division {
     * @param {any} industryType
     * @returns {any}
     */
-   constructor(ns, divisionName, industryType) {
+   constructor(ns, divisionName, industryType, inSetup = true) {
       this.ns = ns
       this.divisionName = divisionName
       this.industryType = industryType
@@ -30,8 +30,6 @@ export class Division {
 
 
       this.cityQueue = citiesList
-
-
 
    }
 
@@ -55,6 +53,17 @@ export class Division {
 
       }
       )
+
+      if (this.ns.corporation.getIndustryData(this.industryType).product) {
+         if (this.getInDesignProducts().length == 0 || this.ns.corporation.getDivision(this.divisionName).products.length < 3) {
+            let totalBudget = Math.min(this.ns.corporation.getCorporation().funds, this.ns.corporation.getDivision(this.divisionName).lastCycleRevenue * 100)
+            if (totalBudget > 0) {
+               this.createProduct(totalBudget / 2, totalBudget / 2)
+            }
+
+
+         }
+      }
 
    }
 
@@ -157,7 +166,7 @@ export class Division {
 
    createProduct(design, market) {
       let products = this.ns.corporation.getDivision(this.divisionName).products
-      if (products.length > 3) {
+      if (products.length >= 3) {
          this.ns.corporation.discontinueProduct(this.divisionName, products[0])
       }
 
@@ -176,8 +185,12 @@ export class Division {
 
 
    getInDesignProducts() {
+      return this.ns.corporation.getDivision(this.divisionName).products.filter(p => { return this.ns.corporation.getProduct(this.divisionName, "Aevum", p).developmentProgress < 100 })
+   }
 
-      return this.ns.corporation.getDivision(this.divisionName).products.filter(p => { this.ns.corporation.getProduct(this.divisionName, "Aevum", p).developmentProgress < 100 })
+   setProductionBoostingMaterialInEachCity(nbHardware, nbRobots, nbAi, nbRealEstate) {
+      Object.values(this.citiesDivisions).forEach(d => d.setProductionBoostingMaterial(nbHardware, nbRobots, nbAi, nbRealEstate))
+
    }
 
 }

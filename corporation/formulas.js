@@ -1,3 +1,4 @@
+import { IndustriesData } from "corporation/industryData";
 
 
 
@@ -11,6 +12,29 @@
 export function getMarkupLimit(material, materialData) {
    return material.quality / materialData.baseMarkup;
 }
+
+
+/**
+ * Return the production multiplier. Every city should have the same ammount of material.
+ * @param {any} industryType
+ * @param {any} nbRE
+ * @param {any} nbHardware
+ * @param {any} nbRobot
+ * @param {any} nbAI
+ * @returns {any}
+ */
+export function productionFactor(industryType, nbRE, nbHardware, nbRobot, nbAI) {
+   let cityMult = Math.pow(0.002 * nbRE + 1, IndustriesData[industryType].realEstateFactor) *
+      Math.pow(0.002 * nbHardware + 1, IndustriesData[industryType].hardwareFactor) *
+      Math.pow(0.002 * nbRobot + 1, IndustriesData[industryType].robotFactor) *
+      Math.pow(0.002 * nbAI + 1, IndustriesData[industryType].aiCoreFactor)
+
+   cityMult = Math.pow(cityMult, 0.73) * 6
+
+   cityMult = cityMult < 1 ? 1 : cityMult
+   return cityMult
+}
+
 
 /**
  * Description
